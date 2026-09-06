@@ -1,0 +1,217 @@
+# Casa — architettura e decisioni
+
+Aggiornato al 6 settembre 2026. Questo file è l'handoff: chi riprende il
+progetto legge solo questo.
+
+---
+
+## 1. Cosa è
+
+Hub per la ristrutturazione e l'arredo dell'appartamento di via Raviola 32
+(Mezzocammino, Roma). Fa quattro cose:
+
+1. **Benchmark** di prodotti e servizi da acquistare — la funzione centrale.
+2. **Ambienti**: la casa come struttura, con i vincoli dimensionali reali.
+3. **Acquisti**: spesa, preferiti, acquistato, plafond bonus mobili.
+4. **Documentazione**: planimetrie, atti, fatture, preventivi, indicizzati.
+
+Più una **chat** su due superfici e una **coda dei lavori** che collega la
+pagina al mondo esterno.
+
+---
+
+## 2. Fasi
+
+| | Fase 1 (attuale) | Fase 2 |
+|---|---|---|
+| Runtime | Artifact Claude, file unico | Next.js su Vercel |
+| Dati | database dell'artifact | Supabase Postgres |
+| File | scheda + link; originale su Drive | Supabase Storage + Drive |
+| Modello | `sample`, tre livelli | API, modelli per nome |
+| Ricerca web | **non esiste nella pagina** | `web_search` server-side |
+| Accesso | solo il proprietario, tutti i suoi dispositivi | login, più utenti |
+
+### Perché la fase 1 non è pubblicamente condivisibile
+
+Un artifact che dichiara `db` o `mcp` diventa interno all'organizzazione:
+ogni lettore deve essere autenticato. Non è una scelta, è il contratto del
+runtime. La scelta reale era fra *dati persistenti* e *link pubblico*.
+Abbiamo scelto i dati: senza di essi la coda dei lavori non funziona e
+l'app è vuota su ogni nuovo dispositivo.
+
+### Perché la ricerca web non è nella pagina
+
+Il modello raggiungibile dall'artifact non naviga e non ha strumenti
+oltre alle funzioni della pagina. Non è una questione di piano di
+abbonamento. Di conseguenza i prezzi generati in pagina sono **stime da
+conoscenza del modello** e vanno sempre verificati: l'app lo dichiara
+esplicitamente nel campo `daVerificare` di ogni candidato.
+
+---
+
+## 3. Lo strato dati
+
+`Store` è un adattatore con un'interfaccia sola:
+
+    Store.get(path)        Store.set(path, data)
+    Store.del(path)        Store.list(collection)
+
+Tre implementazioni previste, una attiva alla volta:
+
+- `db` — database dell'artifact. Attivo se `claude.use("db")` risolve.
+- `local` — `localStorage`. Fallback automatico.
+- `supabase` — fase 2. Stessi path, stessi metodi.
+
+**Nessuna vista conosce il backend.** Il passaggio alla fase 2 tocca
+`Store` e nient'altro.
+
+### Path
+
+    app/config            pesi dei criteri, tema, livello del modello
+    ambienti/{id}         nome, note, budget
+    benchmark/{id}        meta + candidati[] + chat[]
+    documenti/{id}        scheda estratta, testo, hash, link, superato
+    cartelle/{id}         nome
+    coda/{id}             job per la ricerca reale
+    chat/globale          conversazione dell'assistente
+
+Limiti del backend `db`: 5.000 documenti per artifact, 256 KiB per
+documento. Per questo i messaggi di chat vivono **dentro** il benchmark
+(ultimi 60) e non come documenti singoli.
+
+### Schema benchmark
+
+    { titolo, tipo, categoria: prodotto|servizio, ambienti: [id],
+      esigenza, vincoli, budget, data, stato, bonusMobili,
+      modelliUtente,
+      candidati: [{ id, marca, modello, prezzo, venditore, garanziaMesi,
+                    specs: [{k,v}], punteggi: {criterio: 0-10},
+                    tco: {kwhAnno, costoKwh, anniVita},
+                    pro: [], contro: [], fonti: [], daVerificare,
+                    preferito, acquistato, prezzoPagato, dataAcquisto,
+                    link: [url forniti dall'utente] }],
+      chat: [{r: me|ai|err, t, d}] }
+
+Stati: `bozza` → `attesa` (in coda) → `corso` → `fatto`.
+
+Il punteggio è la media ponderata dei criteri valorizzati; i criteri
+senza valore non entrano nel calcolo. I pesi si cambiano in Impostazioni
+e ricalcolano tutta la classifica.
+
+---
+
+## 4. La coda dei lavori — il pezzo che rende scalabile il resto
+
+La pagina non può navigare né leggere URL. Invece di fingere, scrive un
+job:
+
+    { tipo, stato: nuovo|preso|fatto, creato, ref, titolo, ...payload }
+
+Tipi previsti:
+
+| tipo | payload | chi lo esegue |
+|---|---|---|
+| `benchmark-ricerca-reale` | richiesta completa | oggi io, domani un cron |
+| `leggi-link` | url dell'utente | idem |
+| `indicizza-documento` | id del documento | idem |
+
+**Fase 1**: leggo la coda con `read_db`, eseguo con la ricerca web vera,
+riscrivo i candidati con `write_db`. L'utente vede comparire i dati
+nell'app senza copiare niente.
+
+**Fase 2**: un route handler su Vercel legge la stessa tabella, chiama
+l'API con `web_search_20260209` e scrive lo stesso JSON. **Il frontend
+non cambia di una riga.** Questo è il senso della coda: il contratto è
+identico, cambia solo chi lo onora.
+
+### Gerarchia delle fonti per la ricerca reale
+
+Ereditata dalla v1 e confermata:
+
+1. Test di laboratorio indipendenti (Altroconsumo, Stiftung Warentest, Which?).
+2. Indagini di affidabilità e tassi di guasto per marca.
+3. Discussioni su Reddit — in Italia è la piattaforma in maggiore crescita.
+   Se il thread è estero, verificare che il codice modello sia quello IT.
+4. Recensioni negative recenti (1-2 stelle, ultimi 12 mesi): i pattern nei
+   reclami, non la media stellare.
+5. Trustpilot **solo** per giudicare il venditore, mai il prodotto.
+
+Da evitare: classifiche affiliate e siti di comparazione automatica.
+
+---
+
+## 5. Documenti: come si risparmiano i token
+
+    upload → SHA-256 → estrazione testo → scheda strutturata → archivio
+
+- **Estrazione**: `pdf.js` da cdnjs per i PDF, decodifica diretta per
+  testo e CSV. Se fallisce, il documento entra in coda con stato
+  `da-indicizzare` invece di mentire.
+- **Scheda**: una sola chiamata al modello, livello rapido. Produce tipo,
+  fornitore, oggetto, imponibile, IVA, totale, data, scadenza, riassunto
+  e parole chiave.
+- **La chat legge la scheda, mai il file.** Una richiesta ripetuta sullo
+  stesso preventivo costa quanto la prima riga di contesto: zero
+  rielaborazione.
+- **Deduplica**: hash identico → il file viene scartato.
+- **Obsolescenza**: stesso fornitore e stesso oggetto, data più recente →
+  il precedente passa a `superato`, resta consultabile ma esce dal
+  contesto della chat. Niente preventivi zombie nelle risposte.
+
+Il file originale **non** viene caricato: resta su Drive o su disco, e il
+documento ne conserva il link. In fase 2 diventa un upload vero su
+Supabase Storage con copia su Drive.
+
+---
+
+## 6. Chat
+
+Due superfici, una implementazione (`Chat` + `chatHTML`):
+
+- **incorporata** nel benchmark, contesto = i candidati con specifiche,
+  pro, contro e link dell'utente. Salvata in `benchmark/{id}.chat`.
+- **overlay globale**, presente su ogni pagina, contesto = ambienti,
+  benchmark archiviati in forma compatta, schede dei documenti non
+  superati, stato della spesa. Salvata in `chat/globale`.
+
+L'overlay non perde il contesto navigando perché l'applicazione è a
+pagina singola: il documento non viene mai ricaricato.
+
+Contesto limitato a 14.000 caratteri, ultimi 14 turni inviati, ultimi 60
+messaggi conservati. Il livello del modello (`quick` / `default` /
+`complex`) si sceglie dall'intestazione della chat.
+
+---
+
+## 7. Interfaccia
+
+Ispirata ai cataloghi di interior design: serif display in
+Cormorant Garamond, sans geometrico maiuscolo e spaziato in Jost, palette
+calda (avorio, sabbia, cuoio, verde bosco), regole sottili, molto respiro.
+
+**La CSP dell'artifact blocca ogni immagine esterna**: niente fotografia.
+Il registro visivo è quindi tipografico, con illustrazioni line-art in SVG
+inline (`ICONE`, scelte da `iconaPer()` sul nome del prodotto).
+
+Tema chiaro e scuro, entrambi definiti su token; responsive testato a
+390 px senza scorrimento orizzontale.
+
+---
+
+## 8. Da fare
+
+1. **Consumare la coda**: eseguire i job `benchmark-ricerca-reale` con la
+   ricerca web e riscrivere i candidati.
+2. **Fase 2**: progetto Supabase, schema relazionale, `Store.supabase`,
+   route handler per la coda, deploy Vercel, login per due utenti.
+3. **Upload reale dei file** su Supabase Storage con copia su Drive.
+4. **Riverifica prezzi in blocco** per i candidati più vecchi di 30 giorni.
+5. **Interruzione del benchmark** in corso (oggi si può fermare solo la chat).
+
+## 9. Contratto con l'utente
+
+Italiano, diretto, critico. Nessuna adulazione, nessun padding, nessuna
+promessa fumosa. Non ripetere le sue parole come fossero intuizioni.
+Informazioni solo verificate: ammettere ciò che non è possibile invece di
+aggirarlo. La cosa che chiede per prima è quella che deve funzionare per
+prima.
