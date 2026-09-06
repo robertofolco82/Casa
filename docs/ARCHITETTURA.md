@@ -245,3 +245,43 @@ blocca ogni chiamata di rete verso host esterni. Supabase entra in gioco
 solo con la fase 2, quando l'app esce dall'artifact e gira su Vercel.
 Fino ad allora lo schema resta pronto ma vuoto, e la migrazione dei dati
 dal database dell'artifact si fa con un'esportazione una tantum.
+
+---
+
+## 11. Perché il modello della pagina non cerca — e come lo abbiamo aggirato
+
+Due Claude diversi, e la differenza non è il piano di abbonamento.
+
+| | Claude dentro la pagina (`sample`) | Claude in sessione (Claude Code) |
+|---|---|---|
+| Cosa è | un endpoint di completamento testo | un agente con una cassetta degli attrezzi |
+| Strumenti | solo funzioni della pagina | WebSearch, WebFetch, file, database |
+| Rete | **bloccata dalla CSP del runtime** | aperta |
+| Sa cosa è in commercio oggi | no, si ferma alla data di addestramento | sì, lo va a leggere |
+
+Il piano Pro paga il cervello, non l'attrezzatura. Anche scrivendo un client
+di ricerca dentro la pagina, la CSP dell'artifact blocca ogni richiesta di
+rete verso qualunque host: è il browser a impedirlo, non una policy che si
+possa disattivare.
+
+**Conseguenza di progetto**: alla pagina è vietato nominare prodotti.
+`preparaGriglia()` chiede al modello ciò che sa davvero e che non invecchia —
+quali specifiche confrontare, cosa chiarire prima di comprare, quali trappole
+evitare, quali fasce di prezzo. I nomi dei modelli entrano solo dalla ricerca
+reale. Il contesto della chat contiene un divieto esplicito e la data di oggi.
+
+### La Routine che svuota la coda
+
+    Casa — esegui la coda dei benchmark
+    trig_01URxV1K1n4twnGQFU49fpJ6 · ogni ora al minuto 29 UTC
+    sessione nuova a ogni esecuzione, notifica push a fine lavoro
+
+Ogni ora una sessione parte, legge `coda`, e per ogni job in stato `nuovo`
+esegue la ricerca web vera, riscrive i candidati nel benchmark e chiude il
+job. Se la coda è vuota si ferma subito: costa quasi niente.
+
+È così che l'artifact "acquisisce" la ricerca web senza averla: non dentro
+la pagina, ma accanto ad essa. Lo stesso contratto passerà a un cron su
+Vercel in fase 2, e la Routine si spegne.
+
+Per fermarla o cambiarne la cadenza serve l'id del trigger qui sopra.

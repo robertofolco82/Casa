@@ -459,6 +459,9 @@ const AMBIENTI_DEF=[
   ["porte","Porte e serramenti",""],
 ];
 const PLAFOND_BONUS=5000;
+const ANNO_CORRENTE=new Date().getFullYear();
+/* un prodotto di due generazioni fa non è un candidato: è un residuo di magazzino */
+const generazioneSuperata=a=>{const n=Number(a); return n&&n<=ANNO_CORRENTE-2};
 
 /* ════════════════════════════════════════════════════════════════════════
    STORE — adattatore dati. Tre backend possibili, una sola interfaccia.
@@ -881,6 +884,7 @@ function righeBenchmark(){
       out.push({
         bid:b.id, cid:c.id, titolo:b.titolo, tipo:b.tipo||"",
         marca:[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"—",
+        anno:c.anno?Number(c.anno):null, classe:c.classeEnergetica||"",
         costo:num(c.prezzo), rank:rank>=0?rank+1:null, tot:cands.length,
         data:b.data||"", ambiente:nomiAmbienti(b.ambienti), amb:b.ambienti||[],
         dove:c.venditore||"", preferito:!!c.preferito, acquistato:!!c.acquistato,
@@ -928,7 +932,8 @@ function vElenco(){
     ${righe.length?`<div class="tscroll"><table>
       <thead><tr>
         ${th("data","Data")}${th("titolo","Prodotto")}${th("marca","Marca / Modello")}
-        ${th("costo","Costo")}${th("rank","Rank")}${th("ambiente","Ambiente")}${th("dove","Dove")}
+        ${th("anno","Anno")}${th("classe","Classe en.")}${th("costo","Costo")}
+        ${th("rank","Rank")}${th("ambiente","Ambiente")}${th("dove","Dove")}
         <th style="width:70px"></th>
       </tr></thead>
       <tbody>${righe.map(r=>`
@@ -936,6 +941,8 @@ function vElenco(){
           <td class="num tiny">${dataIt(r.data)}</td>
           <td><div>${esc(r.titolo)}</div><div class="tiny">${esc(r.tipo)}</div></td>
           <td>${esc(r.marca)}</td>
+          <td class="num tiny">${r.anno?esc(r.anno)+(generazioneSuperata(r.anno)?" ⚠":""):"—"}</td>
+          <td class="tiny">${esc(r.classe||"—")}</td>
           <td class="num">${eur(r.costo)}</td>
           <td>${r.rank?`<span class="rank ${r.rank===2?"r2":r.rank>2?"r3":""}">${r.rank}</span>
             <span class="tiny num">/${r.tot}</span>`:"—"}</td>
@@ -1003,11 +1010,17 @@ function vDettaglio(r){
       alla prossima sessione lo eseguo con la ricerca web e riscrivo qui prezzi,
       punteggi e fonti verificate.</div>`:""}
 
+    ${cands.some(c=>generazioneSuperata(c.anno))?`<div class="note warn" style="margin-top:18px">
+      <strong>Attenzione:</strong> ${cands.filter(c=>generazioneSuperata(c.anno)).length} candidati sono
+      di almeno due generazioni fa. Siamo nel ${ANNO_CORRENTE}: verifica se esiste il successore
+      a prezzo comparabile prima di decidere.</div>`:""}
+
     ${cands.length?`
     <div style="margin:28px 0 10px" class="spread">
       <div class="micro micro-ink">Comparativa · ${cands.length} candidati</div>
       <div class="row-tight">
         <button class="btn ghost xs" data-act="job-verifica" data-b="${b.id}">⟳ Verifica prezzi con ricerca reale</button>
+        ${b.griglia?"":`<button class="btn ghost xs" data-act="griglia" data-b="${b.id}">Griglia</button>`}
         <button class="btn ghost xs" data-act="add-cand" data-b="${b.id}">+ candidato</button>
       </div>
     </div>
@@ -1019,6 +1032,9 @@ function vDettaglio(r){
           ${c.acquistato?'<span style="color:var(--green)">✓</span>':""}
         </div>
         <div class="cand-head">${esc(c.marca||"")} ${esc(c.modello||c.nome||"")}</div>
+        ${c.anno?`<div class="tiny num" style="margin-top:3px${generazioneSuperata(c.anno)
+          ?";color:var(--danger)":""}">${esc(c.anno)}${c.classeEnergetica
+          ?" · classe "+esc(c.classeEnergetica):""}</div>`:""}
       </th>`).join("")}</tr></thead>
       <tbody>
         <tr><td>Punteggio</td>${cands.map(c=>`<td class="${c._p&&c._p>=maxP?"best":""}">
@@ -1027,6 +1043,12 @@ function vDettaglio(r){
         </td>`).join("")}</tr>
         ${riga("Prezzo",c=>{const p=num(c.prezzo);
           return `<span class="num ${p===minPrezzo?"":""}">${eur(p)}</span>`})}
+        ${riga("Anno di uscita",c=>c.anno
+          ?`<span class="num">${esc(c.anno)}</span>${generazioneSuperata(c.anno)
+            ?' <span class="badge b-err" style="margin-left:4px">superato</span>':""}`
+          :'<span class="tiny">da verificare</span>')}
+        ${riga("Classe energetica",c=>c.classeEnergetica
+          ?esc(c.classeEnergetica):'<span class="tiny">da verificare</span>')}
         ${riga("TCO 10 anni",c=>`<span class="num">${c._tco?eur(c._tco):"—"}</span>`)}
         ${riga("Venditore",c=>esc(c.venditore||"—"))}
         <tr><td colspan="${cands.length+1}" style="background:var(--sand);padding:7px 14px"
@@ -1081,11 +1103,15 @@ function vDettaglio(r){
     `:`<div class="empty" style="border:1px solid var(--line);border-radius:2px;margin-top:24px">
       ${icona(iconaPer(b.tipo||b.titolo))}
       <div style="margin-top:12px">Nessun candidato ancora.</div>
-      <div class="row" style="justify-content:center;margin-top:16px">
-        ${AI.pronto?`<button class="btn sm" data-act="genera" data-b="${b.id}">Genera 5 candidati</button>`:""}
-        <button class="btn ghost sm" data-act="job-verifica" data-b="${b.id}">Metti in coda per la ricerca reale</button>
+      <div class="tiny" style="max-width:420px;margin:8px auto 0">
+        I nomi dei prodotti arrivano solo dalla ricerca reale: il modello di questa pagina
+        non naviga e i cataloghi che ricorda sono di due o tre generazioni fa.</div>
+      <div class="row" style="justify-content:center;margin-top:18px">
+        <button class="btn sm" data-act="job-verifica" data-b="${b.id}">Metti in coda per la ricerca reale</button>
+        ${AI.pronto?`<button class="btn ghost sm" data-act="griglia" data-b="${b.id}">Prepara la griglia</button>`:""}
         <button class="btn ghost sm" data-act="add-cand" data-b="${b.id}">Aggiungi a mano</button>
       </div></div>`}
+    ${grigliaHTML(b.griglia)}
 
     <div style="margin-top:44px">
       <div class="sec-head"><h2 class="display" style="font-size:26px">Domande su questo benchmark</h2>
@@ -1411,9 +1437,15 @@ const Chat={
     const L=[];
     L.push("Sei l'assistente del progetto casa di via Raviola 32 a Mezzocammino (Roma).");
     L.push("Rispondi in italiano, diretto, senza adulazione e senza ripetere la domanda.");
-    L.push("Non hai accesso a internet: se un dato richiede una verifica online, dillo e");
-    L.push("suggerisci di mettere il benchmark in coda per la ricerca reale.");
-    L.push("Non inventare prezzi, misure o fonti: se non li hai, dichiaralo.");
+    L.push(`Oggi è il ${oggi()}. Siamo nel ${ANNO_CORRENTE}.`);
+    L.push("Non hai accesso a internet e la tua data di addestramento è nel passato.");
+    L.push("REGOLA VINCOLANTE: non nominare MAI modelli, sigle o prezzi di prodotti");
+    L.push("presi dalla tua memoria. I cataloghi che ricordi sono superati di anni.");
+    L.push("Se ti chiedono quali prodotti comprare, dillo apertamente e proponi di");
+    L.push("mettere il benchmark in coda per la ricerca reale.");
+    L.push("Puoi invece parlare liberamente di: criteri, specifiche da confrontare,");
+    L.push("compromessi tecnici, domande da chiudere, trappole d'acquisto, e dei");
+    L.push("candidati che trovi qui sotto, che provengono da una ricerca verificata.");
     L.push("");
     L.push("AMBIENTI:");
     for(const a of S.ambienti) L.push(`- ${a.nome}${a.note?" ("+a.note+")":""}`);
@@ -1676,6 +1708,10 @@ function modaleCand(b,c){
   modale({titolo:c?"Scheda candidato":"Nuovo candidato",campi:[
     {k:"marca",label:"Marca",val:c?.marca},
     {k:"modello",label:"Modello",val:c?.modello},
+    {k:"anno",label:"Anno di uscita",tipo:"num",val:c?.anno,ph:String(ANNO_CORRENTE),
+      hint:"Se è di due generazioni fa, l'app te lo segnala in rosso"},
+    {k:"classeEnergetica",label:"Classe energetica",val:c?.classeEnergetica,
+      ph:"A, B, … G — oppure «E (SDR)»",hint:"Etichetta EU. Obbligatoria per gli elettrodomestici"},
     {k:"prezzo",label:"Prezzo €",tipo:"num",val:c?.prezzo},
     {k:"venditore",label:"Venditore",val:c?.venditore,ph:"Unieuro, Amazon, negozio di zona…"},
     {k:"garanziaMesi",label:"Garanzia (mesi)",tipo:"num",val:c?.garanziaMesi},
@@ -1694,6 +1730,7 @@ function modaleCand(b,c){
   ],salva:async v=>{
     const nc=c?{...c}:{id:uid(),preferito:false,acquistato:false,link:[]};
     nc.marca=v.marca; nc.modello=v.modello; nc.prezzo=v.prezzo; nc.venditore=v.venditore;
+    nc.anno=v.anno?Number(v.anno):null; nc.classeEnergetica=v.classeEnergetica;
     nc.garanziaMesi=v.garanziaMesi; nc.daVerificare=v.daVerificare; nc.prezzoPagato=v.prezzoPagato;
     nc.punteggi={}; for(const cr of CRITERI){ const x=v["p_"+cr.k]; if(x!=="") nc.punteggi[cr.k]=num(x) }
     nc.specs=(v.specs||"").split("\n").map(r=>r.trim()).filter(Boolean).map(r=>{
@@ -1710,60 +1747,82 @@ function modaleCand(b,c){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   GENERAZIONE CANDIDATI (senza rete: conoscenza del modello, dichiarata)
+   GRIGLIA DI VALUTAZIONE
+
+   Il modello raggiungibile da questa pagina non naviga e ha una data di
+   addestramento: chiedergli quali prodotti comprare oggi produce cataloghi
+   vecchi di due o tre generazioni. Successo apparente, risposta inutile.
+
+   Quindi qui NON si generano nomi di prodotto. Si genera ciò che il modello
+   sa davvero e che non invecchia: quali specifiche contano per questa
+   categoria, quali domande vanno chiuse prima di comprare, quali sono le
+   trappole tipiche. I nomi dei modelli arrivano solo dalla ricerca reale.
    ════════════════════════════════════════════════════════════════════════ */
-async function generaCandidati(b){
-  if(!AI.pronto) return toast("Modello non disponibile");
-  S.ui.busy=true; toast("Sto costruendo le schede… può richiedere un minuto",6000);
-  const miei=(b.modelliUtente||"").trim();
-  const p=`Sei un consulente d'acquisto. Devi produrre schede comparative per l'arredo di
-un appartamento a Roma. NON hai accesso a internet: usa solo ciò che sai, e dichiara
-esplicitamente quando un dato non è verificabile.
+async function preparaGriglia(b){
+  if(!AI.pronto) return toast("Modello non disponibile in questa vista");
+  S.ui.busy=true; render();
+  const p=`Sei un consulente d'acquisto per la ristrutturazione di un appartamento a Roma.
+
+IMPORTANTE: NON nominare modelli, marche o prezzi di prodotti specifici. La tua data
+di addestramento è nel passato e i cataloghi che ricordi sono superati: siamo nel
+${ANNO_CORRENTE}. Nominare prodotti produrrebbe consigli sbagliati. I nomi li fornirà
+una ricerca web reale, in un secondo momento.
+
+Il tuo compito è preparare la GRIGLIA con cui valutare i candidati quando arriveranno.
 
 RICHIESTA: ${b.titolo}
 TIPOLOGIA: ${b.tipo||"non specificata"}
+NATURA: ${b.categoria==="servizio"?"servizio":"prodotto"}
 AMBIENTI: ${nomiAmbienti(b.ambienti)||"non specificati"}
 ESIGENZA: ${b.esigenza||"non specificata"}
 VINCOLI: ${b.vincoli||"nessuno dichiarato"}
 BUDGET MASSIMO: ${b.budget?b.budget+" €":"non specificato"}
-${miei?"MODELLI IMPOSTI DALL'UTENTE (usa esattamente questi):\n"+miei:"Scegli tu i 5 modelli più adatti, disponibili sul mercato italiano."}
 
-REGOLE VINCOLANTI:
-- Rispondi SOLO con un array JSON. Nessun testo prima o dopo.
-- Non usare mai il carattere doppio apice dentro i valori: per i pollici scrivi 55 pollici.
-- Ogni campo di testo massimo 110 caratteri.
-- I prezzi sono STIME di listino indicativo: mettili in "prezzo" e segnala in "daVerificare"
-  che vanno confermati con una ricerca reale.
-- Punteggi interi da 0 a 10. Se un criterio non è valutabile, ometti la chiave.
-- Massimo 5 specs, 2 pro, 2 contro, 3 fonti. Le fonti sono tipologie consultate a memoria
-  (es. test Altroconsumo, discussioni Reddit), non URL inventati.
-- Ordina dal migliore al peggiore per adeguatezza alla richiesta.
+Rispondi SOLO con questo JSON, nessun testo attorno:
+{"specifiche":[{"k":"","perche":""}],
+ "domande":[""],
+ "trappole":[""],
+ "fasce":[{"fascia":"","da":0,"a":0,"cosaCambia":""}],
+ "fonti":[""]}
 
-Formato di ogni elemento:
-{"marca":"","modello":"","prezzo":0,"venditore":"","garanziaMesi":0,
- "specs":[{"k":"","v":""}],
- "punteggi":{"tecnica":0,"prezzoValore":0,"costruzione":0,"brand":0,"assistenza":0,"durata":0,"recensioni":0},
- "tco":{"kwhAnno":0},"pro":[""],"contro":[""],"fonti":[""],
- "daVerificare":"","rispettaVincoli":true}
-
-Restituisci esattamente 5 elementi${miei?" o uno per ogni modello imposto":""}.`;
+specifiche: massimo 8 caratteristiche da confrontare riga per riga, con in "perche"
+  una frase su perché conta PER QUESTO caso specifico, non in generale.
+  Includi sempre anno di uscita, e la classe energetica se consuma corrente.
+domande: massimo 5 cose che l'utente deve chiarire prima di comprare
+  (misure da rilevare, abitudini d'uso, vincoli d'impianto).
+trappole: massimo 4 errori tipici di chi compra questa categoria.
+fasce: 2 o 3 fasce di prezzo indicative in euro, con cosa cambia davvero salendo.
+fonti: massimo 4 tipi di fonte da consultare nella ricerca reale, in ordine di
+  affidabilità. Massimo 130 caratteri per campo di testo.`;
   try{
-    const arr=await AI.json(p,{tier:S.cfg.tier==="quick"?"default":S.cfg.tier});
-    const lista=Array.isArray(arr)?arr:(arr.candidati||arr.prodotti||[]);
-    if(!lista.length) throw {code:"vuoto",message:"Nessun candidato restituito"};
-    b.candidati=lista.slice(0,8).map(c=>({
-      id:uid(),marca:c.marca||"",modello:c.modello||"",nome:c.nome||"",
-      prezzo:c.prezzo??"",venditore:c.venditore||"",garanziaMesi:c.garanziaMesi||"",
-      specs:Array.isArray(c.specs)?c.specs.filter(s=>s&&s.k):[],
-      punteggi:c.punteggi||{},tco:{...(c.tco||{}),costoKwh:0.25,anniVita:10},
-      pro:c.pro||[],contro:c.contro||[],fonti:c.fonti||[],
-      daVerificare:c.daVerificare||"",preferito:false,acquistato:false,link:[],
-    }));
-    b.stato="corso"; b.data=b.data||oggi();
+    const g=await AI.json(p,{tier:"default"});
+    b.griglia={...g,generata:oggi()};
     await salvaBench(b);
-    toast("5 schede pronte. Ora mettile in coda per la verifica dei prezzi reali.");
+    toast("Griglia pronta. I prodotti arrivano con la ricerca reale.",4000);
   }catch(e){ toast(AI.copy(e),5000) }
   S.ui.busy=false; render();
+}
+
+function grigliaHTML(g){
+  if(!g) return "";
+  const L=(t,a,f)=>a?.length?`<div style="margin-top:18px"><div class="micro">${t}</div>
+    <div style="margin-top:8px">${a.map(f).join("")}</div></div>`:"";
+  return `<div class="card" style="margin-top:24px">
+    <div class="spread"><div class="micro micro-ink">Griglia di valutazione</div>
+      <span class="tiny">preparata il ${dataIt(g.generata)} · nessun prodotto nominato</span></div>
+    ${L("Cosa confrontare",g.specifiche,x=>`<div class="lrow" style="padding:8px 0;align-items:flex-start">
+      <div style="min-width:190px" class="small">${esc(x.k)}</div>
+      <div class="grow tiny">${esc(x.perche||"")}</div></div>`)}
+    ${L("Da chiarire prima di comprare",g.domande,x=>`<div class="lrow" style="padding:7px 0">
+      <span style="color:var(--accent)">·</span><div class="grow small">${esc(x)}</div></div>`)}
+    ${L("Trappole tipiche",g.trappole,x=>`<div class="lrow" style="padding:7px 0">
+      <span style="color:var(--danger)">!</span><div class="grow small">${esc(x)}</div></div>`)}
+    ${L("Fasce di prezzo indicative",g.fasce,x=>`<div class="lrow" style="padding:8px 0;align-items:flex-start">
+      <div style="min-width:190px" class="small num">${esc(x.fascia)}${x.da?` · ${eur(x.da)}–${eur(x.a)}`:""}</div>
+      <div class="grow tiny">${esc(x.cosaCambia||"")}</div></div>`)}
+    ${g.fonti?.length?`<div class="tiny" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line2)">
+      Fonti da consultare nella ricerca reale: ${g.fonti.map(esc).join(" · ")}</div>`:""}
+  </div>`;
 }
 </script>
 
@@ -1923,10 +1982,11 @@ const A={
     await salvaBench(b);
     S.ui.bozzaQ=""; S.ui.bozzaModelli=""; S.ui.bozzaTipo=""; S.ui.bozzaBudget=""; S.ui.ambScelti=[];
     vai("b/"+b.id);
-    if(AI.pronto) setTimeout(()=>generaCandidati(byId(S.benchmarks,b.id)),300);
-    else await A["job-verifica"]({dataset:{b:b.id}});
+    /* i prodotti li porta sempre la ricerca reale, mai la memoria del modello */
+    await A["job-verifica"]({dataset:{b:b.id}});
+    if(AI.pronto) setTimeout(()=>preparaGriglia(byId(S.benchmarks,b.id)),300);
   },
-  genera:el=>generaCandidati(byId(S.benchmarks,el.dataset.b)),
+  griglia:el=>preparaGriglia(byId(S.benchmarks,el.dataset.b)),
   "job-verifica":async el=>{
     const b=byId(S.benchmarks,el.dataset.b); if(!b) return;
     b.stato="attesa"; await salvaBench(b);
@@ -1934,7 +1994,9 @@ const A={
       richiesta:{titolo:b.titolo,tipo:b.tipo,ambienti:nomiAmbienti(b.ambienti),
         esigenza:b.esigenza,vincoli:b.vincoli,budget:b.budget,
         modelliUtente:b.modelliUtente||"",
-        candidatiAttuali:(b.candidati||[]).map(c=>`${c.marca} ${c.modello}`)}});
+        annoMinimo:ANNO_CORRENTE-1,
+        campiObbligatori:["anno","classeEnergetica","prezzo","venditore","fonti"],
+        candidatiAttuali:(b.candidati||[]).map(c=>`${c.marca} ${c.modello} (${c.anno||"anno ignoto"})`)}});
     render(); toast("In coda. Alla prossima sessione lo eseguo con la ricerca web vera.",4500);
   },
   "edit-bench":el=>modaleBench(byId(S.benchmarks,el.dataset.id)),
