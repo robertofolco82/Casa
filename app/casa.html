@@ -562,6 +562,94 @@ const AI={
   },
 };
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   DRIVE — l'ibrido che chiedeva Roberto.
+
+   La pagina NON può chiamare Google Drive via rete: la CSP la blocca.
+   Ma può chiamare i CONNETTORI di chi guarda attraverso il runtime di
+   Claude: non è una richiesta di rete, è un ponte. Verificato in sessione:
+   creazione cartelle, upload di PDF binario, spostamento, rilettura.
+
+   Il file originale finisce nel Drive di Roberto. L'app tiene la scheda,
+   l'id e il link. I due archivi restano allineati.
+   ════════════════════════════════════════════════════════════════════════ */
+const LIMITE_DRIVE = 4 * 1024 * 1024;   /* oltre, il payload base64 diventa fragile */
+
+function base64Da(buf){
+  const u = new Uint8Array(buf); let s = ""; const passo = 0x8000;
+  for(let i=0;i<u.length;i+=passo) s += String.fromCharCode.apply(null, u.subarray(i, i+passo));
+  return btoa(s);
+}
+
+const Drive = {
+  mcp:null, mappa:null, stato:"non-disponibile", ultimoErrore:null,
+
+  async init(){
+    try{ this.mcp = await window.claude?.use?.("mcp") }catch{ this.mcp = null }
+    this.mappa = await Store.get("app/drive");
+    this.stato = !this.mcp ? "non-disponibile"
+               : !this.mappa?.cartelle ? "senza-cartelle"
+               : "pronto";
+    return this.stato;
+  },
+  attivo(){ return this.stato === "pronto" },
+  cartellaId(idApp){ return this.mappa?.cartelle?.[idApp] || this.mappa?.radice || null },
+
+  /* branch per codice: ogni errore ha una via d'uscita diversa */
+  copia(e){
+    const c = e?.code;
+    return {
+      not_granted:"Devi consentire a questa pagina di usare il tuo Google Drive.",
+      approval_required:"Il caricamento su Drive è in attesa della tua approvazione.",
+      server_not_connected:"Google Drive non è collegato al tuo account claude.ai: aggiungilo fra i connettori.",
+      needs_reauth:"L'accesso a Google Drive è scaduto: ricollegalo dalle impostazioni di claude.ai.",
+      not_in_manifest:"Questa versione dell'app non ha accesso a quello strumento di Drive.",
+      blocked_by_policy:"Una policy blocca l'accesso a Drive.",
+      server_unavailable:"Drive non risponde in questo momento. Il file resta indicizzato qui: riprova più tardi.",
+      upstream_error:"Drive ha risposto con un errore. Il file resta indicizzato qui.",
+      rate_limited:"Troppe richieste a Drive di seguito: aspetta qualche secondo.",
+      tool_error:"Drive ha rifiutato l'operazione: " + (e?.message || "motivo non riportato"),
+      cancelled:"Caricamento su Drive annullato.",
+    }[c] || ("Drive non raggiungibile" + (c ? " (" + c + ")" : "") + ".");
+  },
+
+  async carica(file, buf, idCartellaApp){
+    if(!this.attivo()) return null;
+    if(file.size > LIMITE_DRIVE)
+      return {errore:"Oltre 4 MB: caricalo a mano nella cartella del progetto su Drive."};
+    const parentId = this.cartellaId(idCartellaApp);
+    if(!parentId) return {errore:"Cartella di destinazione non configurata su Drive."};
+    try{
+      const r = await this.mcp.callTool(this.mappa.connettore || "Google Drive", "create_file", {
+        title:file.name, parentId,
+        contentMimeType:file.type || "application/octet-stream",
+        disableConversionToGoogleType:true,
+        base64Content:base64Da(buf),
+      });
+      const p = r?.payload || {};
+      if(!p.id) return {errore:"Drive non ha restituito l'identificativo del file."};
+      this.ultimoErrore = null;
+      return {id:p.id, url:p.viewUrl || "", dim:p.fileSize};
+    }catch(e){
+      /* una scrittura fallita è ambigua: non ritento da solo */
+      this.ultimoErrore = e?.code || "sconosciuto";
+      return {errore:this.copia(e)};
+    }
+  },
+
+  async sposta(fileId, idCartellaApp){
+    if(!this.attivo() || !fileId) return null;
+    const parentId = this.cartellaId(idCartellaApp);
+    if(!parentId) return {errore:"Cartella non configurata su Drive."};
+    try{
+      const r = await this.mcp.callTool(this.mappa.connettore || "Google Drive", "update_file",
+        {fileId, parentId});
+      return {id:r?.payload?.id || fileId};
+    }catch(e){ return {errore:this.copia(e)} }
+  },
+};
+
 /* ════════════════════════════════════════════════════════════════════════
    STATO
    ════════════════════════════════════════════════════════════════════════ */
@@ -578,6 +666,7 @@ const S={
 async function carica(){
   const mode=await Store.init();
   await AI.init();
+  await Drive.init();
   const cfg=await Store.get("app/config");
   if(cfg) S.cfg={...S.cfg,...cfg};
   S.ambienti=await Store.list("ambienti");
@@ -1287,6 +1376,9 @@ function vDocumenti(){
           <div style="margin-top:10px;font-size:15px">Trascina qui i file, oppure fai click per aprire
             ${navigator.platform?.toLowerCase().includes("mac")?"il Finder":"Esplora risorse"}</div>
           <div class="tiny" style="margin-top:6px">PDF, immagini, testo, fogli · planimetrie, atti, fatture, preventivi</div>
+          <div class="tiny" style="margin-top:4px">${Drive.attivo()
+            ? "Il file originale finisce nel tuo Google Drive, in «Casa — Via Raviola 32». Qui restano scheda e link."
+            : "L'originale resta sul tuo disco: qui salvo la scheda indicizzata e il link che gli dai."}</div>
         </div>
         <input type="file" id="fileinput" multiple class="hide">
 
@@ -1316,7 +1408,10 @@ function vDocumenti(){
             <td class="small">${esc(d.scheda?.fornitore||d.scheda?.oggetto||d.scheda?.tipo||"—")}</td>
             <td class="num">${d.scheda?.totale?eur(num(d.scheda.totale)):"—"}</td>
             <td class="num tiny">${dataIt(d.scheda?.data||d.caricato)}</td>
-            <td style="text-align:right">
+            <td style="text-align:right;white-space:nowrap">
+              ${d.driveUrl?`<a class="link q" href="${esc(d.driveUrl)}" target="_blank"
+                rel="noopener" title="Apri il file su Google Drive">Drive</a><span class="sep">·</span>`
+                :d.driveErrore?`<span class="tiny" style="color:var(--danger)" title="${esc(d.driveErrore)}">⚠</span> `:""}
               <button class="link q" data-act="apri-doc" data-id="${d.id}">apri</button></td>
           </tr>`).join("")}</tbody></table></div>`
           :`<div class="empty">${icona("doc")}<div style="margin-top:10px">
@@ -1371,6 +1466,21 @@ function vImpostazioni(){
             <button class="btn ghost sm" data-act="export">Esporta JSON</button>
             <button class="btn ghost sm" data-act="import">Importa JSON</button>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="micro">Google Drive</div>
+          <div class="small" style="margin-top:10px">${{
+            "pronto":"Collegato. I file caricati finiscono nella cartella del progetto.",
+            "senza-cartelle":"Connettore attivo, ma la mappa delle cartelle non è configurata.",
+            "non-disponibile":"Non collegato in questa vista: i file restano solo indicizzati qui."
+          }[Drive.stato]}</div>
+          ${Drive.mappa?.radiceUrl?`<div style="margin-top:12px">
+            <a class="link q" href="${esc(Drive.mappa.radiceUrl)}" target="_blank" rel="noopener">
+              Apri «Casa — Via Raviola 32» su Drive</a></div>`:""}
+          <div class="tiny" style="margin-top:10px">
+            La pagina non chiama Drive via rete — la sandbox lo vieta — ma passa dal
+            connettore del tuo account claude.ai. Limite per file: 4 MB.</div>
         </div>
 
         <div class="card">
@@ -1496,7 +1606,8 @@ const Chat={
         L.push("","SCHEDE DEI DOCUMENTI (già estratte: usa queste, non chiedere di rileggere i file):");
         for(const d of docs.slice(0,60)){
           const s=d.scheda||{};
-          L.push(`- [${d.id}] ${d.nome} | cartella ${carNome(d.cartella)} | tipo ${s.tipo||"n.d."}`+
+          L.push(`- [${d.id}] ${d.nome} | cartella ${carNome(d.cartella)}`+
+            (d.driveUrl?" | su Drive":"")+` | tipo ${s.tipo||"n.d."}`+
             ` | fornitore ${s.fornitore||"n.d."} | oggetto ${s.oggetto||"n.d."}`+
             ` | totale ${s.totale||"n.d."} | data ${s.data||d.caricato||"n.d."}`);
           if(s.riassunto) L.push("    "+String(s.riassunto).slice(0,220));
@@ -1909,7 +2020,7 @@ function normalizza(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g
 async function gestisciFile(files){
   if(!files||!files.length) return;
   const cart=S.ui.cartella==="tutte"?(S.cartelle[0]?.id||"altro"):S.ui.cartella;
-  let nuovi=0,dupli=0,superati=0;
+  let nuovi=0,dupli=0,superati=0,suDrive=0,errDrive=null;
   for(const file of files){
     if(file.size>25*1024*1024){ toast(`"${file.name}" supera 25 MB: caricalo su Drive e incolla il link`,5000); continue }
     toast(`Leggo ${file.name}…`,4000);
@@ -1937,12 +2048,20 @@ async function gestisciFile(files){
         else d.superato=true;
       }
     }
+    /* il file originale va nel Drive di Roberto; qui restano scheda, id e link */
+    if(Drive.attivo()){
+      const up=await Drive.carica(file,buf,cart);
+      if(up?.id){ d.driveId=up.id; d.driveUrl=up.url; suDrive++ }
+      else if(up?.errore){ d.driveErrore=up.errore; errDrive=up.errore }
+    }
     await salvaDoc(d); nuovi++;
     if(!testo) await nuovoJob("indicizza-documento",{ref:d.id,titolo:file.name,
       nota:"Estrazione testo non riuscita nel browser: da elaborare in Claude Code."});
   }
   render();
-  toast(`${nuovi} caricati${dupli?`, ${dupli} duplicati scartati`:""}${superati?`, ${superati} superati`:""}`,4500);
+  toast(`${nuovi} caricati${suDrive?`, ${suDrive} su Drive`:""}`+
+    `${dupli?`, ${dupli} duplicati scartati`:""}${superati?`, ${superati} superati`:""}`,4500);
+  if(errDrive) setTimeout(()=>toast("Drive: "+errDrive,7000),1200);
 }
 
 function apriDoc(id){
@@ -1950,8 +2069,10 @@ function apriDoc(id){
   const s=d.scheda||{};
   modale({titolo:d.nome,campi:[
     {k:"cartella",label:"Cartella",tipo:"select",val:d.cartella,opz:S.cartelle.map(c=>[c.id,c.nome])},
-    {k:"driveUrl",label:"Link al file (Drive, Dropbox, ecc.)",val:d.driveUrl,
-      ph:"https://drive.google.com/…",hint:"Il file originale resta tuo: qui teniamo la scheda e il link."},
+    {k:"driveUrl",label:"Link al file originale",val:d.driveUrl,
+      ph:"https://drive.google.com/…",
+      hint:d.driveId?"Caricato automaticamente nel tuo Drive al momento dell'upload."
+        :"Il file originale resta tuo: qui teniamo la scheda e il link."},
     {tipo:"titolo",label:"Scheda estratta"},
     {k:"tipo",label:"Tipo",val:s.tipo},
     {k:"fornitore",label:"Fornitore",val:s.fornitore},
@@ -2078,8 +2199,15 @@ const A={
       S.cartelle.push({id,nome:v.nome||"Cartella"}); chiudiModale(); render()}}),
   upload:()=>$("#fileinput")?.click(),
   "apri-doc":el=>apriDoc(el.dataset.id),
-  "sposta-doc":async el=>{const d=byId(S.documenti,el.dataset.id);
-    d.cartella=el.value; await salvaDoc(d); render(); toast("Spostato in "+carNome(el.value))},
+  "sposta-doc":async el=>{
+    const d=byId(S.documenti,el.dataset.id); const dest=el.value;
+    d.cartella=dest; await salvaDoc(d); render();
+    if(d.driveId&&Drive.attivo()){
+      const r=await Drive.sposta(d.driveId,dest);
+      toast(r?.errore?("Spostato qui, ma su Drive no: "+r.errore)
+        :("Spostato in "+carNome(dest)+", anche su Drive"),r?.errore?6000:2600);
+    }else toast("Spostato in "+carNome(dest));
+  },
   "del-job":async el=>{await Store.del("coda/"+el.dataset.id);
     S.coda=S.coda.filter(j=>j.id!==el.dataset.id); render()},
 

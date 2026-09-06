@@ -290,3 +290,63 @@ Vale anche per la fase 2: **niente cron su Vercel.** La coda si svuota
 quando il frontend chiama l'endpoint, cioè quando Roberto preme il pulsante.
 Un processo periodico che gira a vuoto costa e non serve a nessuno.
 
+
+
+---
+
+## 12. L'ibrido: Drive dentro l'artifact (6 settembre 2026)
+
+Idea di Roberto, e funziona. La pagina **non** può chiamare Google Drive via
+rete — la CSP la blocca come tutto il resto — ma può chiamare i **connettori
+di chi guarda** attraverso il runtime di Claude. Non è una richiesta di rete:
+è un ponte, e passa.
+
+Verificato in sessione prima di scrivere una riga di codice:
+
+| Operazione | Strumento | Esito |
+|---|---|---|
+| Creare una cartella | `create_file` mime folder | id + viewUrl |
+| Caricare un PDF binario | `create_file` + `base64Content` | 640 byte, mime conservato |
+| Spostare fra cartelle | `update_file` + `parentId` | nuovo parent |
+| Rileggere il contenuto | `download_file_content` | base64 identico |
+
+### Struttura creata su Drive
+
+    Casa — Via Raviola 32          1GXcQFlj2RfOzpYkEJWvT2jWdL3ipGJrA
+      ├── Planimetrie              1-lJuZkKMKvb4yakgL2Icb1x0yXL0erqp
+      ├── Atti e contratti         1ysXDg5DChnyozoz0AxVEDdVZLA9wQ2qj
+      ├── Fatture                  167GjLS--Cr88MAxVwfXq7CZ18wWjhIcS
+      ├── Preventivi servizi       1AzlTc0ma19SPzvvk8DWVxdlswaXr29_Z
+      ├── Preventivi prodotti      1pRNsFY7YBQ1mkyMc3_aS8yzQpEno_WqZ
+      └── Schede tecniche          1yFUNuGwykBu0DxFIMQZ_UdxvPRmRmPjs
+
+La mappa vive in `app/drive` nel database, non nel codice: si corregge senza
+ripubblicare. Il modulo `Drive` gestisce ogni codice di errore con la sua via
+d'uscita (riconnetti, aggiungi il connettore, consenti, riprova) — mai un
+banner generico. Limite 4 MB per file: oltre, il payload base64 diventa
+fragile e l'app lo dice invece di fallire in silenzio.
+
+Su una scrittura fallita **non ritenta da sola**: un rifiuto non è prova che
+l'operazione non sia avvenuta. Il documento resta comunque indicizzato
+nell'app, con l'errore in chiaro nella riga.
+
+### Perché Supabase NON entra nell'artifact
+
+Il connettore Supabase esiste e la pagina potrebbe chiamarlo. Non lo facciamo:
+`execute_sql` darebbe a una pagina web il potere di eseguire SQL arbitrario
+sul database, e in cambio di cosa? Il `db` dell'artifact fa già lo stesso
+lavoro, senza consenso per chiamata e senza round-trip. Supabase serve in
+fase 2, quando a parlarci è un server.
+
+### La divisione del lavoro, definitiva per la fase 1
+
+    ARTIFACT                        QUESTA CHAT (Claude Code)
+    ─────────────────────────       ──────────────────────────────
+    interfaccia e navigazione       ricerca web vera
+    archivio dei dati (db)          lettura dei link forniti
+    upload dei file → Drive         indicizzazione pesante
+    Q&A sui dati già presenti       scrittura dei risultati nel db
+    griglia di valutazione
+    coda: scrive i job              coda: esegue i job
+
+    Il ponte è la coda. Roberto preme, poi dice "esegui la coda".
