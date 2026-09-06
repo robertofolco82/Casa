@@ -310,15 +310,23 @@ Verificato in sessione prima di scrivere una riga di codice:
 | Spostare fra cartelle | `update_file` + `parentId` | nuovo parent |
 | Rileggere il contenuto | `download_file_content` | base64 identico |
 
-### Struttura creata su Drive
+### Struttura su Drive
 
-    Casa — Via Raviola 32          1GXcQFlj2RfOzpYkEJWvT2jWdL3ipGJrA
-      ├── Planimetrie              1-lJuZkKMKvb4yakgL2Icb1x0yXL0erqp
-      ├── Atti e contratti         1ysXDg5DChnyozoz0AxVEDdVZLA9wQ2qj
-      ├── Fatture                  167GjLS--Cr88MAxVwfXq7CZ18wWjhIcS
-      ├── Preventivi servizi       1AzlTc0ma19SPzvvk8DWVxdlswaXr29_Z
-      ├── Preventivi prodotti      1pRNsFY7YBQ1mkyMc3_aS8yzQpEno_WqZ
-      └── Schede tecniche          1yFUNuGwykBu0DxFIMQZ_UdxvPRmRmPjs
+Account: **roberto.folco@gmail.com**. Cartella nuova nella radice di My Drive,
+**separata dall'archivio storico**: la cartella «Raviola» con planimetrie,
+visure, atti, fatture e mutuo resta intatta e l'app non ci scrive mai.
+
+    Raviola 32                       1ctJMUvwEx41cSwvy-Fny0n1WnmGqL3iM
+      ├── Planimetrie                1_lONK0-bVg1eX8o5e5jFcQicmNIFIGVb
+      ├── Atti e contratti           1qCuf_9WqxXmKmiKn7hddf9nxBRL9skg0
+      ├── Fatture acquisti           1IhtK-8ioa95RVUD19WbP7KPZv_gJwCst
+      ├── Preventivi servizi         12JYvseOkGrcpatajlJb0jTg-hbGrs92J
+      ├── Preventivi prodotti        1miyVYuKIDMr-LDKpKj3YQk98Gf_TYc_L
+      └── Schede tecniche prodotti   1BL11oB9QE6zA90x7W6BzlG1WcavxbXDu
+
+Regola: **l'app scrive solo dentro «Raviola 32»**. I documenti storici si
+consultano dove sono; se servono all'app, se ne registra il link, non se ne
+sposta il file.
 
 La mappa vive in `app/drive` nel database, non nel codice: si corregge senza
 ripubblicare. Il modulo `Drive` gestisce ogni codice di errore con la sua via
