@@ -215,3 +215,33 @@ promessa fumosa. Non ripetere le sue parole come fossero intuizioni.
 Informazioni solo verificate: ammettere ciò che non è possibile invece di
 aggirarlo. La cosa che chiede per prima è quella che deve funzionare per
 prima.
+
+---
+
+## 10. Supabase — progetto e schema (creato il 6 settembre 2026)
+
+    progetto  Casa
+    ref       rusiwikqzxzyjrnihrgm
+    regione   eu-west-1 (Irlanda)
+    postgres  17.6
+
+Schema applicato con la migrazione `20260906_schema_iniziale.sql`, che vive
+nel repository ed è la fonte di verità: ogni modifica futura si fa come
+nuova migrazione lì dentro, mai a mano dalla dashboard.
+
+Nove tabelle: `ambienti`, `cartelle`, `benchmark`, `benchmark_ambienti`,
+`candidati`, `messaggi`, `documenti`, `coda`, `config`. RLS attiva su
+tutte, nessun accesso anonimo: il frontend legge come utente autenticato,
+i job della coda girano server-side con la service role.
+
+Ricerca full text in italiano sui documenti: colonna generata `tsv` su
+nome, fornitore, oggetto, riassunto e testo estratto, con indice GIN.
+È questa la ragione principale per cui Supabase batte un foglio Drive.
+
+### Vincolo da tenere presente
+
+**L'artifact non potrà mai parlare con Supabase**: la CSP del runtime
+blocca ogni chiamata di rete verso host esterni. Supabase entra in gioco
+solo con la fase 2, quando l'app esce dall'artifact e gira su Vercel.
+Fino ad allora lo schema resta pronto ma vuoto, e la migrazione dei dati
+dal database dell'artifact si fa con un'esportazione una tantum.
