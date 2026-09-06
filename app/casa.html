@@ -174,7 +174,7 @@ nav.main a.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}
 .radio.on i{border-color:var(--ink)}
 .radio.on i::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ink)}
 .radio.on{color:var(--ink)}
-.launcher-more{margin-top:16px;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.launcher-more{margin-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
 
 /* ═══════════════ TABELLA ═══════════════ */
 .tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
@@ -762,12 +762,12 @@ function vHome(){
           <button class="btn" data-act="nuovo-benchmark">Avvia benchmark</button>
         </div>
         <div class="opts">
-          <span class="radio ${S.ui.modo!=="miei"?"on":""}" data-act="modo" data-v="trova"><i></i>Trovami i 5 migliori</span>
+          <span class="radio ${S.ui.modo!=="miei"?"on":""}" data-act="modo" data-v="trova"><i></i>Trovami tu i migliori (da 3 a 5)</span>
           <span class="radio ${S.ui.modo==="miei"?"on":""}" data-act="modo" data-v="miei"><i></i>Confronta i modelli che ti do</span>
         </div>
         ${S.ui.modo==="miei"?`
         <div style="margin-top:14px">
-          <textarea id="q-modelli" placeholder="Un modello per riga — es.&#10;LG OLED55C4&#10;Sony Bravia 8 55&#10;Samsung QE55S90D">${esc(S.ui.bozzaModelli||"")}</textarea>
+          <textarea id="q-modelli" placeholder="Un modello o fornitore per riga — es.&#10;LG OLED65C6&#10;Sony Bravia 8 II&#10;Samsung QE65S95H">${esc(S.ui.bozzaModelli||"")}</textarea>
         </div>`:""}
         <div class="launcher-more">
           <label class="field"><span>Tipologia prodotto</span>
@@ -780,8 +780,14 @@ function vHome(){
               ${S.ambienti.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join("")}
             </select>
           </label>
+          <label class="field"><span>Natura</span>
+            <select id="q-natura">
+              <option value="prodotto" ${S.ui.bozzaNatura!=="servizio"?"selected":""}>Prodotto</option>
+              <option value="servizio" ${S.ui.bozzaNatura==="servizio"?"selected":""}>Servizio</option>
+            </select>
+          </label>
           <label class="field"><span>Budget max €</span>
-            <input id="q-budget" inputmode="numeric" placeholder="900" style="max-width:130px"
+            <input id="q-budget" inputmode="numeric" placeholder="900"
               value="${esc(S.ui.bozzaBudget||"")}">
           </label>
         </div>
@@ -986,7 +992,8 @@ function vDettaglio(r){
 
     <div class="spread" style="align-items:flex-start;margin-bottom:8px">
       <div>
-        <div class="micro">${esc(b.tipo||"Prodotto")} · ${b.categoria==="servizio"?"Servizio":"Prodotto"}</div>
+        <div class="micro">${esc(b.tipo||"—")} · ${b.categoria==="servizio"?"Servizio":"Prodotto"}
+          · ${b.modelliUtente?"confronto dei tuoi modelli":"ricerca da 3 a 5 candidati"}</div>
         <h1 class="display" style="font-size:clamp(30px,5vw,46px);margin-top:6px">${esc(b.titolo)}</h1>
       </div>
       <div class="row-tight">
@@ -1006,9 +1013,12 @@ function vDettaglio(r){
     ${b.vincoli?`<div class="note" style="margin-top:14px">${esc(b.vincoli)}</div>`:""}
 
     ${b.stato==="attesa"?`<div class="note" style="margin-top:18px">
-      <strong>In coda per la ricerca reale.</strong> Il job è scritto nell'archivio:
-      alla prossima sessione lo eseguo con la ricerca web e riscrivo qui prezzi,
-      punteggi e fonti verificate.</div>`:""}
+      <strong>In coda per la ricerca reale.</strong>
+      ${b.modelliUtente?"Verificherò i modelli che hai indicato":"Cercherò da 3 a 5 "+
+        (b.categoria==="servizio"?"fornitori":"prodotti")}, con prezzo, anno di uscita,
+      classe energetica e fonti dichiarate.
+      <br>Il servizio è a richiesta: niente gira in background. Apri una sessione e scrivi
+      <strong>«esegui la coda»</strong> quando vuoi i risultati.</div>`:""}
 
     ${cands.some(c=>generazioneSuperata(c.anno))?`<div class="note warn" style="margin-top:18px">
       <strong>Attenzione:</strong> ${cands.filter(c=>generazioneSuperata(c.anno)).length} candidati sono
@@ -1103,11 +1113,16 @@ function vDettaglio(r){
     `:`<div class="empty" style="border:1px solid var(--line);border-radius:2px;margin-top:24px">
       ${icona(iconaPer(b.tipo||b.titolo))}
       <div style="margin-top:12px">Nessun candidato ancora.</div>
-      <div class="tiny" style="max-width:420px;margin:8px auto 0">
-        I nomi dei prodotti arrivano solo dalla ricerca reale: il modello di questa pagina
-        non naviga e i cataloghi che ricorda sono di due o tre generazioni fa.</div>
+      <div class="tiny" style="max-width:440px;margin:8px auto 0">
+        ${b.modelliUtente
+          ? "Confronterò i modelli che hai indicato, verificandone prezzo, anno e classe energetica."
+          : "Cercherò da 3 a 5 "+(b.categoria==="servizio"?"fornitori":"prodotti")+
+            " che rispondono a questa esigenza, sul mercato italiano di oggi."}
+        <br>I nomi arrivano solo dalla ricerca reale: il modello di questa pagina non naviga
+        e i cataloghi che ricorda sono di due o tre generazioni fa.</div>
       <div class="row" style="justify-content:center;margin-top:18px">
-        <button class="btn sm" data-act="job-verifica" data-b="${b.id}">Metti in coda per la ricerca reale</button>
+        <button class="btn sm" data-act="job-verifica" data-b="${b.id}">
+          ${b.modelliUtente?"Verifica questi modelli":"Trovami da 3 a 5 candidati"}</button>
         ${AI.pronto?`<button class="btn ghost sm" data-act="griglia" data-b="${b.id}">Prepara la griglia</button>`:""}
         <button class="btn ghost sm" data-act="add-cand" data-b="${b.id}">Aggiungi a mano</button>
       </div></div>`}
@@ -1386,9 +1401,9 @@ function vImpostazioni(){
         <span class="tiny">${jobs.filter(j=>j.stato==="nuovo").length} da eseguire</span></div>
       <p class="lead" style="max-width:720px;margin-bottom:18px">
         Qui finiscono le richieste che hanno bisogno della ricerca web vera, che dentro questa
-        pagina non esiste. Le eseguo io in Claude Code e riscrivo il risultato nell'archivio.
-        Domani lo stesso identico contratto lo consuma un processo automatico su Vercel:
-        il frontend non cambia di una riga.</p>
+        pagina non esiste. <strong>Nulla parte da solo</strong>: apri una sessione Claude e
+        scrivi «esegui la coda» quando vuoi i risultati. Accumularne diverse e farle in un
+        colpo solo costa meno che eseguirle una alla volta.</p>
       ${jobs.length?`<div class="tscroll"><table>
         <thead><tr><th>Creato</th><th>Tipo</th><th>Oggetto</th><th>Stato</th><th style="width:40px"></th></tr></thead>
         <tbody>${jobs.map(j=>`<tr>
@@ -1975,7 +1990,9 @@ const A={
     leggiBozza();
     const t=(S.ui.bozzaQ||"").trim();
     if(!t) return toast("Scrivi cosa devi comprare");
-    const b={id:uid(),titolo:t,tipo:S.ui.bozzaTipo||"",categoria:"prodotto",
+    const b={id:uid(),titolo:t,tipo:S.ui.bozzaTipo||"",
+      categoria:S.ui.bozzaNatura==="servizio"?"servizio":"prodotto",
+      modalita:S.ui.modo==="miei"?"confronta":"trova",
       ambienti:S.ui.ambScelti||[],esigenza:t,vincoli:"",budget:S.ui.bozzaBudget||"",
       data:oggi(),stato:"bozza",candidati:[],chat:[],bonusMobili:false,
       modelliUtente:S.ui.modo==="miei"?(S.ui.bozzaModelli||""):""};
@@ -1993,6 +2010,9 @@ const A={
     await nuovoJob("benchmark-ricerca-reale",{ref:b.id,titolo:b.titolo,
       richiesta:{titolo:b.titolo,tipo:b.tipo,ambienti:nomiAmbienti(b.ambienti),
         esigenza:b.esigenza,vincoli:b.vincoli,budget:b.budget,
+        natura:b.categoria||"prodotto",
+        modalita:b.modelliUtente?"confronta":(b.modalita||"trova"),
+        minCandidati:3, maxCandidati:5,
         modelliUtente:b.modelliUtente||"",
         annoMinimo:ANNO_CORRENTE-1,
         campiObbligatori:["anno","classeEnergetica","prezzo","venditore","fonti"],
@@ -2109,6 +2129,7 @@ function leggiBozza(){
   S.ui.bozzaModelli=g("q-modelli")??S.ui.bozzaModelli;
   S.ui.bozzaTipo=g("q-tipo")??S.ui.bozzaTipo;
   S.ui.bozzaBudget=g("q-budget")??S.ui.bozzaBudget;
+  S.ui.bozzaNatura=g("q-natura")??S.ui.bozzaNatura;
 }
 
 /* ─────────── eventi globali ─────────── */
