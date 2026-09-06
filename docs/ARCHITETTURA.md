@@ -270,18 +270,23 @@ quali specifiche confrontare, cosa chiarire prima di comprare, quali trappole
 evitare, quali fasce di prezzo. I nomi dei modelli entrano solo dalla ricerca
 reale. Il contesto della chat contiene un divieto esplicito e la data di oggi.
 
-### La Routine che svuota la coda
+### Come si svuota la coda: a richiesta, mai in background
 
-    Casa — esegui la coda dei benchmark
-    trig_01URxV1K1n4twnGQFU49fpJ6 · ogni ora al minuto 29 UTC
-    sessione nuova a ogni esecuzione, notifica push a fine lavoro
+**Il servizio è pull, non push.** La coda si esegue quando Roberto lo chiede,
+in una sessione Claude Code aperta da lui:
 
-Ogni ora una sessione parte, legge `coda`, e per ogni job in stato `nuovo`
-esegue la ricerca web vera, riscrive i candidati nel benchmark e chiude il
-job. Se la coda è vuota si ferma subito: costa quasi niente.
+    "esegui la coda"
 
-È così che l'artifact "acquisisce" la ricerca web senza averla: non dentro
-la pagina, ma accanto ad essa. Lo stesso contratto passerà a un cron su
-Vercel in fase 2, e la Routine si spegne.
+Io leggo `coda` con `read_db`, faccio la ricerca web vera sui job in stato
+`nuovo`, riscrivo i candidati nel benchmark e chiudo i job. Costo: zero
+quando nessuno chiede niente.
 
-Per fermarla o cambiarne la cadenza serve l'id del trigger qui sopra.
+Una Routine oraria che sveglia una sessione per controllare una coda quasi
+sempre vuota è stata creata e subito cancellata: 24 risvegli al giorno per
+un servizio interrogato qualche volta a settimana sono spreco puro. Non
+c'è nessun requisito di tempo reale — un benchmark non scade in un'ora.
+
+Vale anche per la fase 2: **niente cron su Vercel.** La coda si svuota
+quando il frontend chiama l'endpoint, cioè quando Roberto preme il pulsante.
+Un processo periodico che gira a vuoto costa e non serve a nessuno.
+
