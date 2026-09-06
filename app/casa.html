@@ -1,0 +1,2116 @@
+<title>Casa Raviola</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════ TOKEN ═══════════════ */
+:root{
+  --bg:#FBF9F6; --surface:#FFFFFF; --sand:#F4EEE7; --sand2:#EBE2D7;
+  --line:#E3DACF; --line2:#F0E9E1;
+  --ink:#1E1B18; --ink2:#574F47; --muted:#8E8377;
+  --accent:#8A6A4B; --accent-soft:#EFE4D7;
+  --green:#3C4A3E; --green-soft:#E3E8E1;
+  --gold:#A98A55; --danger:#96382C; --danger-soft:#F5E4E0;
+  --shadow:0 1px 2px rgba(30,27,24,.04),0 8px 28px rgba(30,27,24,.06);
+  --shadow-lg:0 2px 6px rgba(30,27,24,.06),0 24px 60px rgba(30,27,24,.14);
+  --fd:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --fs:'Jost',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:2px;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14120F; --surface:#1B1815; --sand:#221E1A; --sand2:#2A251F;
+    --line:#332C25; --line2:#251F1A;
+    --ink:#F3EEE7; --ink2:#C3B9AC; --muted:#8F857A;
+    --accent:#C79E72; --accent-soft:#2C241C;
+    --green:#A8C0A8; --green-soft:#1E251E;
+    --gold:#C7A96B; --danger:#D98876; --danger-soft:#2E1C18;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+    --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 24px 60px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14120F; --surface:#1B1815; --sand:#221E1A; --sand2:#2A251F;
+  --line:#332C25; --line2:#251F1A;
+  --ink:#F3EEE7; --ink2:#C3B9AC; --muted:#8F857A;
+  --accent:#C79E72; --accent-soft:#2C241C;
+  --green:#A8C0A8; --green-soft:#1E251E;
+  --gold:#C7A96B; --danger:#D98876; --danger-soft:#2E1C18;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.4),0 24px 60px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fs);font-weight:300;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{margin:0;font-weight:400;letter-spacing:-.01em}
+p{margin:0 0 .8em}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+input,textarea,select{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px 12px;width:100%;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--ink)}
+textarea{resize:vertical;min-height:80px;line-height:1.55}
+select{cursor:pointer;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+::placeholder{color:var(--muted);opacity:1}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+
+/* ═══════════════ TIPOGRAFIA ═══════════════ */
+.serif{font-family:var(--fd)}
+.display{font-family:var(--fd);font-weight:300;line-height:1.08;letter-spacing:-.015em}
+.micro{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:var(--muted)}
+.micro-ink{color:var(--ink)}
+.lead{font-size:16px;color:var(--ink2);font-weight:300}
+.small{font-size:13px;color:var(--ink2)}
+.tiny{font-size:11.5px;color:var(--muted)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ═══════════════ LAYOUT ═══════════════ */
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px}
+.stack>*+*{margin-top:var(--gap,16px)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row-tight{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.sec{padding:64px 0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:16px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:28px}
+
+/* ═══════════════ HEADER ═══════════════ */
+header.top{position:sticky;top:0;z-index:60;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1240px;margin:0 auto;padding:0 28px}
+.top-r1{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 0 14px}
+.mark{font-family:var(--fd);font-weight:300;font-size:27px;letter-spacing:.26em;
+  text-transform:uppercase;line-height:1;white-space:nowrap}
+.mark small{display:block;font-family:var(--fs);font-size:8.5px;letter-spacing:.32em;
+  color:var(--muted);margin-top:5px;font-weight:400}
+.top-icons{display:flex;align-items:center;gap:4px}
+.iconbtn{width:38px;height:38px;display:grid;place-items:center;background:none;border:0;
+  cursor:pointer;color:var(--ink);border-radius:50%;transition:background .15s;position:relative}
+.iconbtn:hover{background:var(--sand)}
+.iconbtn .dot{position:absolute;top:7px;right:7px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+nav.main{display:flex;gap:30px;padding-bottom:14px;overflow-x:auto;scrollbar-width:none}
+nav.main::-webkit-scrollbar{display:none}
+nav.main a{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:400;
+  color:var(--ink2);padding-bottom:5px;border-bottom:1.5px solid transparent;white-space:nowrap;transition:.15s}
+nav.main a:hover{color:var(--ink)}
+nav.main a.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:500}
+
+/* ═══════════════ BOTTONI ═══════════════ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 26px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);
+  font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;
+  border-radius:var(--r);cursor:pointer;transition:.16s;white-space:nowrap}
+.btn:hover{opacity:.84}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink);opacity:1;background:var(--sand)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{padding:8px 16px;font-size:10.5px;letter-spacing:.14em}
+.btn.xs{padding:5px 11px;font-size:10px;letter-spacing:.1em}
+.btn.wide{width:100%}
+.link{background:none;border:0;padding:0;cursor:pointer;font-size:11.5px;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;color:var(--ink);border-bottom:1px solid var(--line);
+  padding-bottom:2px;transition:.15s}
+.link:hover{border-bottom-color:var(--ink)}
+.link.q{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;color:var(--accent);border-bottom-color:currentColor}
+
+/* ═══════════════ CHIP / TAG ═══════════════ */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border:1px solid var(--line);
+  border-radius:100px;font-size:11px;letter-spacing:.06em;background:var(--surface);white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.soft{background:var(--sand);border-color:transparent;color:var(--ink2)}
+.chip button{background:none;border:0;padding:0;cursor:pointer;opacity:.5;font-size:13px;line-height:1}
+.chip button:hover{opacity:1}
+.chip.pick{cursor:pointer}
+.badge{display:inline-block;padding:3px 9px;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;font-weight:500;border-radius:100px}
+.badge.b-att{background:var(--sand2);color:var(--ink2)}
+.badge.b-cor{background:var(--accent-soft);color:var(--accent)}
+.badge.b-fat{background:var(--green-soft);color:var(--green)}
+.badge.b-acq{background:var(--ink);color:var(--bg)}
+.badge.b-err{background:var(--danger-soft);color:var(--danger)}
+
+/* ═══════════════ CARD ═══════════════ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.card.flat{border-color:var(--line2)}
+.card.pad0{padding:0;overflow:hidden}
+.grid{display:grid;gap:20px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.sidebar-layout{display:grid;grid-template-columns:250px 1fr;gap:32px;align-items:start}
+
+/* card benchmark */
+.bcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;cursor:pointer;transition:.2s;display:flex;flex-direction:column}
+.bcard:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.bcard .art{aspect-ratio:4/3;background:var(--sand);display:grid;place-items:center;
+  border-bottom:1px solid var(--line2);position:relative}
+.bcard .art svg{width:52%;height:52%;opacity:.5}
+.bcard .body{padding:16px 18px 18px;flex:1;display:flex;flex-direction:column;gap:6px}
+.bcard .fav{position:absolute;top:10px;right:10px;font-size:15px;color:var(--accent)}
+
+/* ═══════════════ HERO ═══════════════ */
+.hero{background:var(--sand);border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.hero-art{position:absolute;top:0;right:0;bottom:0;width:52%;opacity:.3;pointer-events:none}
+@media(max-width:900px){.hero-art{display:none}}
+.hero-in{position:relative;max-width:1240px;margin:0 auto;padding:76px 28px 70px}
+.hero h1{font-size:clamp(40px,7vw,74px)}
+.hero .kick{margin-bottom:20px}
+.launcher{max-width:760px;margin-top:34px}
+.launcher .bar{display:flex;gap:0;border:1px solid var(--ink);background:var(--surface);border-radius:var(--r)}
+.launcher .bar input{border:0;padding:17px 20px;background:transparent;font-size:16px}
+.launcher .bar input:focus{outline:none}
+.launcher .bar .btn{border-radius:0;border:0;padding-left:30px;padding-right:30px}
+.opts{margin-top:18px;display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.radio{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink2)}
+.radio i{width:13px;height:13px;border:1.5px solid var(--muted);border-radius:50%;display:inline-block;position:relative}
+.radio.on i{border-color:var(--ink)}
+.radio.on i::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ink)}
+.radio.on{color:var(--ink)}
+.launcher-more{margin-top:16px;display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+
+/* ═══════════════ TABELLA ═══════════════ */
+.tscroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line2);vertical-align:middle}
+thead th{font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;
+  color:var(--muted);background:var(--sand);border-bottom:1px solid var(--line);
+  white-space:nowrap;position:sticky;top:0;z-index:2}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--ink)}
+tbody tr{transition:background .12s}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover{background:var(--sand)}
+tbody tr:last-child td{border-bottom:0}
+td.best{background:var(--green-soft);font-weight:500}
+.rank{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;
+  background:var(--ink);color:var(--bg);font-size:10.5px;font-weight:500}
+.rank.r2{background:var(--muted)}
+.rank.r3{background:var(--sand2);color:var(--ink2)}
+.rank.rx{background:transparent;color:var(--muted);border:1px solid var(--line)}
+
+/* tabella comparativa benchmark */
+.cmp th:first-child,.cmp td:first-child{position:sticky;left:0;background:var(--surface);
+  z-index:1;width:186px;min-width:186px;max-width:186px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cmp thead th:first-child{background:var(--sand);z-index:3}
+.cmp th,.cmp td{min-width:150px}
+.cmp .cand-head{font-family:var(--fd);font-size:17px;letter-spacing:0;text-transform:none;
+  color:var(--ink);font-weight:400;line-height:1.25}
+.score-bar{height:3px;background:var(--line2);border-radius:2px;overflow:hidden;margin-top:5px}
+.score-bar i{display:block;height:100%;background:var(--accent)}
+
+/* ═══════════════ LISTE ═══════════════ */
+.lrow{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line2)}
+.lrow:last-child{border-bottom:0}
+.folder{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;
+  border-radius:var(--r);cursor:pointer;transition:.14s;font-size:13.5px}
+.folder:hover{background:var(--sand)}
+.folder.on{background:var(--ink);color:var(--bg)}
+.folder.on .tiny{color:var(--bg);opacity:.6}
+
+/* ═══════════════ DROPZONE ═══════════════ */
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:40px 24px;text-align:center;
+  background:var(--sand);transition:.18s;cursor:pointer}
+.drop:hover,.drop.hot{border-color:var(--accent);background:var(--accent-soft)}
+
+/* ═══════════════ CHAT ═══════════════ */
+.chat{display:flex;flex-direction:column;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 16px;border-bottom:1px solid var(--line);background:var(--sand)}
+.chat-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.chat-foot{border-top:1px solid var(--line);padding:12px 14px;background:var(--surface)}
+.chat-foot .row{align-items:flex-end}
+.msg{max-width:88%;font-size:14px;line-height:1.6}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px 12px 3px 12px}
+.msg.ai{align-self:flex-start;color:var(--ink)}
+.msg.ai .who{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.msg.err{align-self:flex-start;background:var(--danger-soft);color:var(--danger);
+  padding:10px 14px;border-radius:3px;font-size:13px}
+.msg p:last-child{margin-bottom:0}
+.msg ul{margin:.4em 0;padding-left:1.1em}
+.msg code{background:var(--sand);padding:1px 5px;border-radius:2px;font-size:12.5px}
+.typing{display:inline-flex;gap:4px;align-items:center;color:var(--muted);font-size:12.5px}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:blink 1.3s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.chat-embed{height:460px}
+
+/* overlay chat */
+.fab{position:fixed;right:22px;bottom:22px;z-index:80;display:flex;align-items:center;gap:9px;
+  padding:14px 22px;background:var(--ink);color:var(--bg);border:0;border-radius:100px;
+  cursor:pointer;box-shadow:var(--shadow-lg);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;font-weight:500}
+.fab:hover{opacity:.9}
+.overlay-chat{position:fixed;right:22px;bottom:22px;z-index:81;width:430px;height:min(74vh,660px);
+  box-shadow:var(--shadow-lg);border-radius:var(--r)}
+
+/* ═══════════════ MODALE ═══════════════ */
+.scrim{position:fixed;inset:0;background:rgba(20,17,14,.44);z-index:90;
+  display:grid;place-items:center;padding:20px;backdrop-filter:blur(2px)}
+.modal{background:var(--surface);border-radius:var(--r);width:min(660px,100%);
+  max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-head{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);
+  padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2}
+.modal-body{padding:24px}
+
+/* ═══════════════ VARIE ═══════════════ */
+.field{display:block}
+.field>span{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:500;color:var(--muted);margin-bottom:6px}
+.empty{text-align:center;padding:56px 24px;color:var(--muted)}
+.empty svg{opacity:.35;margin-bottom:14px}
+.note{background:var(--sand);border-left:2px solid var(--accent);padding:12px 16px;font-size:13px;color:var(--ink2)}
+.note.warn{background:var(--danger-soft);border-left-color:var(--danger);color:var(--danger)}
+.meter{height:6px;background:var(--sand2);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--green);transition:width .4s}
+.meter i.over{background:var(--danger)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:120;
+  background:var(--ink);color:var(--bg);padding:12px 22px;border-radius:100px;
+  font-size:12.5px;box-shadow:var(--shadow-lg);animation:up .25s ease-out}
+@keyframes up{from{opacity:0;transform:translate(-50%,10px)}}
+.spin{display:inline-block;width:13px;height:13px;border:1.5px solid currentColor;
+  border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sep{color:var(--line);margin:0 8px}
+.hide{display:none!important}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(max-width:1000px){
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .sidebar-layout{grid-template-columns:1fr;gap:22px}
+}
+@media(max-width:760px){
+  body{font-size:14.5px}
+  .wrap,.top-in,.hero-in{padding-left:18px;padding-right:18px}
+  .sec{padding:40px 0}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .mark{font-size:21px;letter-spacing:.2em}
+  nav.main{gap:20px}
+  .hero-in{padding:48px 18px 44px}
+  .launcher .bar{flex-direction:column}
+  .launcher .bar input{border-bottom:1px solid var(--line)}
+  .launcher .bar .btn{border-radius:0;width:100%;padding:14px}
+  .launcher-more{grid-template-columns:1fr}
+  .overlay-chat{right:0;left:0;bottom:0;width:auto;height:86vh;border-radius:12px 12px 0 0}
+  .fab{right:16px;bottom:16px;padding:13px 19px}
+  .modal{max-height:94vh}
+  .modal-body{padding:18px}
+  .cmp th,.cmp td{min-width:132px}
+  .card{padding:17px}
+}
+@media(max-width:520px){
+  .cmp th:first-child,.cmp td:first-child{min-width:118px}
+}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="top-r1">
+      <a href="#/" class="mark">Casa<small>Via Raviola 32 · Mezzocammino</small></a>
+      <div class="top-icons">
+        <button class="iconbtn" data-act="go" data-route="benchmark?fav=1" title="Preferiti" aria-label="Preferiti">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 20.5s-7.5-4.7-7.5-10A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.9c0 5.3-7.5 10-7.5 10z"/></svg>
+        </button>
+        <button class="iconbtn" data-act="toggle-theme" title="Tema" aria-label="Tema">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+        </button>
+        <button class="iconbtn" data-act="go" data-route="impostazioni" title="Impostazioni" aria-label="Impostazioni">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+        </button>
+      </div>
+    </div>
+    <nav class="main" id="nav"></nav>
+  </div>
+</header>
+
+<main id="view"></main>
+<div id="chatmount"></div>
+<div id="modalmount"></div>
+<div id="toastmount"></div>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   CASA — hub benchmark, ambienti, acquisti e documenti
+   Fase 1: artifact + db. Lo strato dati è un adattatore: cambiando
+   Store.backend si passa a Supabase senza toccare le viste.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────── util ─────────── */
+const $ = (s,r=document)=>r.querySelector(s);
+const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const oggi = ()=>new Date().toISOString().slice(0,10);
+const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = n=>(n===0||n)&&!isNaN(n)?"€ "+Number(n).toLocaleString("it-IT",{maximumFractionDigits:0}):"—";
+const dataIt = d=>d?new Date(d).toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"2-digit"}):"—";
+const num = v=>{const n=parseFloat(String(v??"").replace(/[^\d.,-]/g,"").replace(",","."));return isNaN(n)?null:n};
+const clone = o=>JSON.parse(JSON.stringify(o));
+const byId = (a,id)=>a.find(x=>x.id===id);
+const sortBy = (a,k,dir=1)=>[...a].sort((x,y)=>{
+  const A=x[k],B=y[k];
+  if(A==null&&B==null)return 0; if(A==null)return 1; if(B==null)return -1;
+  return (typeof A==="number"&&typeof B==="number"?A-B:String(A).localeCompare(String(B),"it"))*dir;
+});
+async function sha256(buf){
+  try{const h=await crypto.subtle.digest("SHA-256",buf);
+    return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,32);
+  }catch{ return "h"+buf.byteLength+"-"+uid() }
+}
+function toast(msg,ms=2600){
+  const m=$("#toastmount"); m.innerHTML=`<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast._t); toast._t=setTimeout(()=>m.innerHTML="",ms);
+}
+/* markdown minimale per le risposte della chat */
+function md(t){
+  let s=esc(t);
+  s=s.replace(/```([\s\S]*?)```/g,(m,c)=>`<pre style="background:var(--sand);padding:10px;overflow-x:auto;font-size:12px;border-radius:2px">${c.trim()}</pre>`);
+  s=s.replace(/`([^`\n]+)`/g,"<code>$1</code>");
+  s=s.replace(/\*\*([^*\n]+)\*\*/g,"<strong>$1</strong>");
+  s=s.replace(/(^|\n)[-•*]\s+(.+)/g,"$1<li>$2</li>");
+  s=s.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/g,"<ul>$1</ul>");
+  s=s.replace(/\n{2,}/g,"</p><p>").replace(/\n/g,"<br>");
+  return "<p>"+s+"</p>";
+}
+
+/* ─────────── icone line-art per categoria ─────────── */
+const ICONE={
+  tv:'<path d="M6 20h20v14H6z"/><path d="M12 38h8M16 34v4"/>',
+  divano:'<path d="M5 22v10h22V22"/><path d="M5 22a3 3 0 0 1 6 0v6h10v-6a3 3 0 0 1 6 0"/><path d="M8 32v3M24 32v3"/>',
+  frigo:'<path d="M9 5h14v34H9z"/><path d="M9 17h14"/><path d="M12 11v3M12 21v4"/>',
+  lampada:'<path d="M16 6v6"/><path d="M8 26l8-14 8 14z"/><path d="M16 26v10"/><path d="M11 36h10"/>',
+  letto:'<path d="M4 30V16M28 30v-8H4"/><path d="M4 22h6a3 3 0 0 1 3-3h0a3 3 0 0 1 3 3h12"/><path d="M4 30h24"/>',
+  armadio:'<path d="M7 5h18v34H7z"/><path d="M16 5v34"/><path d="M13 20v4M19 20v4"/>',
+  cucina:'<path d="M5 12h22v22H5z"/><circle cx="11" cy="18" r="2.4"/><circle cx="21" cy="18" r="2.4"/><circle cx="11" cy="27" r="2.4"/><circle cx="21" cy="27" r="2.4"/>',
+  bagno:'<path d="M5 22h22v4a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7z"/><path d="M9 22V9a3 3 0 0 1 6 0"/><path d="M9 33l-2 4M23 33l2 4"/>',
+  clima:'<path d="M4 10h24v10H4z"/><path d="M8 24c0 3 3 3 3 6M16 24c0 3 3 3 3 6M24 24c0 3-3 3-3 6"/>',
+  lavatrice:'<path d="M7 5h18v34H7z"/><circle cx="16" cy="24" r="8"/><circle cx="16" cy="24" r="3.4"/><path d="M11 11h3"/>',
+  porta:'<path d="M9 4h14v36H9z"/><circle cx="19" cy="22" r="1.4"/>',
+  tavolo:'<path d="M4 16h24"/><path d="M7 16v18M25 16v18"/>',
+  servizio:'<circle cx="16" cy="12" r="5"/><path d="M6 36c0-6 4.5-10 10-10s10 4 10 10"/>',
+  altro:'<path d="M6 6h20v28H6z"/><path d="M11 14h10M11 20h10M11 26h6"/>',
+  doc:'<path d="M8 4h12l6 6v26H8z"/><path d="M20 4v6h6"/><path d="M12 20h12M12 26h12M12 14h5"/>'
+};
+const icona=(k,cls="")=>`<svg viewBox="0 0 32 44" fill="none" stroke="currentColor" stroke-width="1.1"
+  stroke-linecap="round" stroke-linejoin="round" class="${cls}">${ICONE[k]||ICONE.altro}</svg>`;
+const iconaPer=t=>{
+  const s=(t||"").toLowerCase();
+  if(/tv|televis|monitor|proiett/.test(s))return"tv";
+  if(/divano|poltrona|imbottit|chaise/.test(s))return"divano";
+  if(/frigo|congelat|cantinet/.test(s))return"frigo";
+  if(/lamp|luce|illumin|plafon|applique/.test(s))return"lampada";
+  if(/letto|materass|rete|comodin/.test(s))return"letto";
+  if(/armadio|cabina|libreri|nicchia|boiserie/.test(s))return"armadio";
+  if(/cucina|forno|piano cottura|cappa|lavastov/.test(s))return"cucina";
+  if(/bagno|doccia|sanitar|lavabo|termoarr|rubinett/.test(s))return"bagno";
+  if(/clima|condizion|caldaia|pompa di calore|cdz|vmc/.test(s))return"clima";
+  if(/lavatric|asciugatric|lavasciug/.test(s))return"lavatrice";
+  if(/porta|ante|serrament|finestr/.test(s))return"porta";
+  if(/tavolo|scrittoio|scrivania|consol/.test(s))return"tavolo";
+  if(/servizio|impresa|idraul|elettricist|imbianch|falegn|trasloc/.test(s))return"servizio";
+  return"altro";
+};
+
+/* ─────────── costanti di dominio ─────────── */
+const CRITERI=[
+  {k:"tecnica",label:"Caratteristiche tecniche",peso:3},
+  {k:"prezzoValore",label:"Rapporto prezzo/valore",peso:3},
+  {k:"costruzione",label:"Qualità di fabbricazione",peso:3},
+  {k:"brand",label:"Affidabilità del brand",peso:2},
+  {k:"assistenza",label:"Servizio assistenza",peso:3},
+  {k:"durata",label:"Durata attesa nel tempo",peso:3},
+  {k:"recensioni",label:"Recensioni clienti",peso:2},
+];
+const STATI={
+  bozza:{l:"Bozza",c:"b-att"},
+  attesa:{l:"In coda",c:"b-att"},
+  corso:{l:"In corso",c:"b-cor"},
+  fatto:{l:"Completato",c:"b-fat"},
+  errore:{l:"Errore",c:"b-err"},
+};
+const CARTELLE_DEF=[
+  {id:"planimetrie",nome:"Planimetrie"},
+  {id:"atti",nome:"Atti e contratti"},
+  {id:"fatture",nome:"Fatture"},
+  {id:"prev-servizi",nome:"Preventivi servizi"},
+  {id:"prev-prodotti",nome:"Preventivi prodotti"},
+  {id:"schede",nome:"Schede tecniche"},
+];
+const AMBIENTI_DEF=[
+  ["soggiorno","Soggiorno","32,80 mq · h 2,80"],
+  ["cucina","Cucina","6,50 mq · h 2,80"],
+  ["matrimoniale","Camera matrimoniale","14,70 mq · h 2,80"],
+  ["camera2","Camera / studio","11,00 mq · h 2,80"],
+  ["bagno-grande","Bagno padronale","h 2,60"],
+  ["bagno-piccolo","Bagno disimpegno","1,31 × 2,06 · h 2,60"],
+  ["disimpegno","Disimpegno e sottoscala","h 2,40"],
+  ["sopra","Livello +3.25 · studio e ospiti","h 2,35"],
+  ["bagno-sopra","Bagno livello +3.25","h 2,35"],
+  ["lavanderia","Lavanderia","vano 88 × 71"],
+  ["terrazzo","Terrazzo",""],
+  ["impianti","Impianti e sicurezza",""],
+  ["porte","Porte e serramenti",""],
+];
+const PLAFOND_BONUS=5000;
+
+/* ════════════════════════════════════════════════════════════════════════
+   STORE — adattatore dati. Tre backend possibili, una sola interfaccia.
+   fase 1: 'db' (server dell'artifact) con fallback 'local' (browser)
+   fase 2: 'supabase' — stessi metodi, stessi path, viste invariate
+   ════════════════════════════════════════════════════════════════════════ */
+const Store={
+  backend:"local", db:null, _lsPrefix:"casa:",
+
+  async init(){
+    try{
+      const db=await window.claude?.use?.("db");
+      if(db){ this.db=db; this.backend="db"; return "db" }
+    }catch(e){ console.warn("db non disponibile:",e?.code||e) }
+    this.backend="local"; return "local";
+  },
+  /* ---- documento singolo ---- */
+  async get(path){
+    if(this.backend==="db"){
+      try{ const s=await this.db.doc(path).get(); return s.exists?s.data():null }
+      catch(e){ this._err(e); return null }
+    }
+    const r=localStorage.getItem(this._lsPrefix+path);
+    return r?JSON.parse(r):null;
+  },
+  async set(path,data){
+    const body={...data,_agg:new Date().toISOString()};
+    if(this.backend==="db"){
+      try{ await this.db.doc(path).set(body); return true }catch(e){ this._err(e); return false }
+    }
+    try{ localStorage.setItem(this._lsPrefix+path,JSON.stringify(body)); this._index(path,1); return true }
+    catch(e){ toast("Spazio del browser esaurito"); return false }
+  },
+  async del(path){
+    if(this.backend==="db"){
+      try{ await this.db.doc(path).delete(); return true }catch(e){ this._err(e); return false }
+    }
+    localStorage.removeItem(this._lsPrefix+path); this._index(path,-1); return true;
+  },
+  /* ---- collection ---- */
+  async list(col){
+    if(this.backend==="db"){
+      try{
+        const s=await this.db.collection(col).get();
+        return s.docs.map(d=>({id:d.id,...d.data()}));
+      }catch(e){ this._err(e); return [] }
+    }
+    const out=[]; const pre=this._lsPrefix+col+"/";
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith(pre)&&k.slice(pre.length).indexOf("/")===-1){
+        try{ out.push({id:k.slice(pre.length),...JSON.parse(localStorage.getItem(k))}) }catch{}
+      }
+    }
+    return out;
+  },
+  _index(){/* il backend locale enumera direttamente le chiavi */},
+  _err(e){
+    const c=e?.code;
+    if(c==="quota_exceeded") toast("Archivio pieno: elimina qualche elemento");
+    else if(c==="resource_exhausted") toast("Troppe operazioni, riprova fra poco");
+    else if(c==="revoked") toast("Accesso all'archivio revocato");
+    else console.warn("store:",c||e);
+  },
+};
+
+/* ════════════════════════════════════════════════════════════════════════
+   CLAUDE — chiamate al modello dalla pagina.
+   Nota: qui dentro il modello NON naviga. La ricerca web vera passa
+   dalla coda dei job, che eseguo io in Claude Code (fase 1) o un cron
+   su Vercel con le API (fase 2).
+   ════════════════════════════════════════════════════════════════════════ */
+const AI={
+  fn:null, pronto:false,
+  async init(){
+    try{ this.fn=await window.claude?.use?.("sample"); this.pronto=!!this.fn }
+    catch{ this.pronto=false }
+    return this.pronto;
+  },
+  async testo(input,{tier="default",onText,signal}={}){
+    if(!this.fn) throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
+    const r=await this.fn(input,{modelTier:tier,onText,signal,cache:false});
+    return r.text;
+  },
+  async json(input,{tier="default",signal}={}){
+    if(!this.fn) throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
+    return await this.fn.json(input,{modelTier:tier,signal});
+  },
+  copy(e){
+    const m={
+      not_granted:"Per usare l'assistente devi consentire le richieste a Claude.",
+      rate_limited:"Troppe richieste in poco tempo. Aspetta qualche secondo.",
+      cancelled:"Richiesta interrotta.",
+      prompt_too_large:"Contesto troppo lungo: ho tagliato la conversazione, riprova.",
+      overloaded:"Claude è sovraccarico in questo momento. Riprova fra poco.",
+    };
+    return m[e?.code]||e?.message||"Non sono riuscito a rispondere.";
+  },
+};
+
+/* ════════════════════════════════════════════════════════════════════════
+   STATO
+   ════════════════════════════════════════════════════════════════════════ */
+const S={
+  pronto:false,
+  cfg:{pesi:Object.fromEntries(CRITERI.map(c=>[c.k,c.peso])),tema:"auto",tier:"default"},
+  ambienti:[], benchmarks:[], documenti:[], cartelle:[], coda:[],
+  chatGlobale:{messaggi:[]},
+  ui:{route:{n:"home"},chatAperta:false,busy:false,ordina:{k:"data",d:-1},
+      filtro:{q:"",amb:"",fav:false,acq:false},cartella:"tutte",menu:false},
+};
+
+/* ─────────── caricamento ─────────── */
+async function carica(){
+  const mode=await Store.init();
+  await AI.init();
+  const cfg=await Store.get("app/config");
+  if(cfg) S.cfg={...S.cfg,...cfg};
+  S.ambienti=await Store.list("ambienti");
+  S.cartelle=await Store.list("cartelle");
+  S.benchmarks=await Store.list("benchmark");
+  S.documenti=await Store.list("documenti");
+  S.coda=await Store.list("coda");
+  S.chatGlobale=(await Store.get("chat/globale"))||{messaggi:[]};
+  if(!S.ambienti.length) await seedAmbienti();
+  if(!S.cartelle.length) await seedCartelle();
+  applicaTema();
+  S.pronto=true;
+  return mode;
+}
+async function seedAmbienti(){
+  for(const [id,nome,note] of AMBIENTI_DEF){
+    const a={nome,note,budget:null,creato:oggi()};
+    await Store.set("ambienti/"+id,a); S.ambienti.push({id,...a});
+  }
+}
+async function seedCartelle(){
+  for(const c of CARTELLE_DEF){
+    await Store.set("cartelle/"+c.id,{nome:c.nome}); S.cartelle.push({...c});
+  }
+}
+async function salvaCfg(patch){
+  S.cfg={...S.cfg,...patch};
+  await Store.set("app/config",S.cfg);
+}
+function applicaTema(){
+  const t=S.cfg.tema;
+  if(t==="auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme",t);
+}
+
+/* ─────────── calcoli di dominio ─────────── */
+function punteggio(c,pesi=S.cfg.pesi){
+  let n=0,d=0;
+  for(const {k} of CRITERI){
+    const v=c.punteggi?.[k];
+    if(v==null||v==="") continue;
+    const w=Number(pesi[k]??1); n+=Number(v)*w; d+=w;
+  }
+  return d?n/d:null;
+}
+function tco(c){
+  const p=num(c.prezzo)||0, anni=num(c.tco?.anniVita)||10;
+  const kwh=(num(c.tco?.kwhAnno)||0)*(num(c.tco?.costoKwh)||0.25);
+  const cons=num(c.tco?.consumabiliAnno)||0;
+  return Math.round(p+(kwh+cons)*anni);
+}
+function classifica(b){
+  const cands=(b.candidati||[]).map(c=>({...c,_p:punteggio(c),_tco:tco(c)}));
+  return sortBy(cands,"_p",-1);
+}
+function vincitore(b){ return classifica(b)[0]||null }
+function nomiAmbienti(ids){
+  return (ids||[]).map(i=>byId(S.ambienti,i)?.nome||i).join(", ");
+}
+function prodottiDiAmbiente(id){
+  const out=[];
+  for(const b of S.benchmarks){
+    if(!(b.ambienti||[]).includes(id)) continue;
+    const v=vincitore(b);
+    out.push({b,v});
+  }
+  return out;
+}
+function speseTotali(){
+  let tot=0,bonus=0;
+  for(const b of S.benchmarks) for(const c of (b.candidati||[])){
+    if(!c.acquistato) continue;
+    const p=num(c.prezzoPagato)??num(c.prezzo)??0;
+    tot+=p; if(b.bonusMobili) bonus+=p;
+  }
+  return {tot,bonus};
+}
+
+/* ─────────── ricerche esterne ─────────── */
+function qDove(c){
+  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
+  return "https://www.google.com/search?tbm=shop&hl=it&gl=it&q="+encodeURIComponent(t+" prezzo");
+}
+function qNegozi(c){
+  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
+  return "https://www.google.com/search?hl=it&gl=it&q="+encodeURIComponent(
+    '"'+t+'" prezzo disponibilità (site:amazon.it OR site:mediaworld.it OR site:unieuro.it OR site:euronics.it OR site:eprice.it OR site:trovaprezzi.it) recensioni negozio affidabile');
+}
+function qRecensioni(c){
+  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
+  return "https://www.google.com/search?hl=it&gl=it&q="+encodeURIComponent(
+    '"'+t+'" (recensione OR problemi OR difetti) (site:reddit.com OR site:hdblog.it OR site:tomshw.it OR site:hwupgrade.it OR site:altroconsumo.it OR site:avmagazine.it)');
+}
+function apri(url){
+  const w=window.open(url,"_blank","noopener");
+  if(!w){ navigator.clipboard?.writeText(url); toast("Il browser ha bloccato la finestra: link copiato") }
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   ROUTER + RENDER
+   Applicazione a pagina singola: la chat in overlay non perde mai il
+   contesto perché il documento non viene mai ricaricato.
+   ════════════════════════════════════════════════════════════════════════ */
+const SEZIONI=[
+  {r:"home",l:"Home"},
+  {r:"benchmark",l:"I tuoi benchmark"},
+  {r:"ambienti",l:"Ambienti"},
+  {r:"acquisti",l:"Acquisti"},
+  {r:"documenti",l:"Documentazione"},
+];
+
+function leggiHash(){
+  const h=(location.hash||"#/").replace(/^#\/?/,"");
+  const [path,qs]=h.split("?");
+  const seg=path.split("/").filter(Boolean);
+  const q=Object.fromEntries(new URLSearchParams(qs||""));
+  if(!seg.length) return {n:"home",q};
+  if(seg[0]==="b"&&seg[1]) return {n:"bench",id:seg[1],q};
+  return {n:seg[0],q};
+}
+function vai(route){ location.hash="#/"+route.replace(/^\/+/,"") }
+
+function renderNav(){
+  const cur=S.ui.route.n;
+  const on=r=>(r===cur||(r==="benchmark"&&cur==="bench"))?"on":"";
+  $("#nav").innerHTML=SEZIONI.map(s=>
+    `<a href="#/${s.r}" class="${on(s.r)}">${s.l}</a>`).join("");
+}
+
+function render(){
+  renderNav();
+  const v=$("#view"); const r=S.ui.route;
+  const viste={home:vHome,benchmark:vElenco,bench:vDettaglio,ambienti:vAmbienti,
+    acquisti:vAcquisti,documenti:vDocumenti,impostazioni:vImpostazioni};
+  const f=viste[r.n]||vHome;
+  v.innerHTML=f(r);
+  window.scrollTo({top:0,behavior:"instant"});
+  renderChat();
+}
+
+window.addEventListener("hashchange",()=>{
+  S.ui.route=leggiHash();
+  if(S.ui.route.q?.fav) S.ui.filtro.fav=true;
+  render();
+});
+
+/* ════════════════════════════════════════════════════════════════════════
+   HOME
+   ════════════════════════════════════════════════════════════════════════ */
+function vHome(){
+  const recenti=sortBy(S.benchmarks,"data",-1).slice(0,4);
+  const daDecidere=[];
+  for(const b of S.benchmarks) for(const c of (b.candidati||[]))
+    if(c.daVerificare) daDecidere.push({b,t:c.daVerificare});
+  const {tot,bonus}=speseTotali();
+  return `
+  <section class="hero">
+    <svg class="hero-art" viewBox="0 0 620 420" preserveAspectRatio="xMidYMid meet" fill="none"
+      stroke="var(--accent)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M40 300h150v-70H40zM40 230a22 22 0 0 1 44 0v42h62v-42a22 22 0 0 1 44 0"/>
+      <path d="M58 300v14M172 300v14"/>
+      <circle cx="285" cy="96" r="26"/><path d="M259 118l26 46 26-46M285 164v122M258 286h54"/>
+      <path d="M380 120h110v166H380zM435 120v166M410 190v18M460 190v18"/>
+      <path d="M520 286V182M600 286V182M520 182h80"/>
+      <path d="M230 232h120v54H230zM268 300h44M290 286v14"/>
+      <path d="M10 314h600"/>
+    </svg>
+    <div class="hero-in">
+      <div class="micro kick">Il cuore del servizio</div>
+      <h1 class="display">Cosa dobbiamo<br>comprare?</h1>
+      <p class="lead" style="max-width:560px;margin-top:18px">
+        Descrivi l'oggetto o il servizio. Ti trovo i cinque che rispondono meglio ai vincoli
+        di casa, oppure metto a confronto i modelli che scegli tu.</p>
+
+      <div class="launcher">
+        <div class="bar">
+          <input id="q-nuovo" placeholder="Es. TV 55 pollici per il soggiorno, max 900 €"
+            value="${esc(S.ui.bozzaQ||"")}" autocomplete="off">
+          <button class="btn" data-act="nuovo-benchmark">Avvia benchmark</button>
+        </div>
+        <div class="opts">
+          <span class="radio ${S.ui.modo!=="miei"?"on":""}" data-act="modo" data-v="trova"><i></i>Trovami i 5 migliori</span>
+          <span class="radio ${S.ui.modo==="miei"?"on":""}" data-act="modo" data-v="miei"><i></i>Confronta i modelli che ti do</span>
+        </div>
+        ${S.ui.modo==="miei"?`
+        <div style="margin-top:14px">
+          <textarea id="q-modelli" placeholder="Un modello per riga — es.&#10;LG OLED55C4&#10;Sony Bravia 8 55&#10;Samsung QE55S90D">${esc(S.ui.bozzaModelli||"")}</textarea>
+        </div>`:""}
+        <div class="launcher-more">
+          <label class="field"><span>Tipologia prodotto</span>
+            <input id="q-tipo" list="tipi" placeholder="TV, Divano, Frigorifero…" value="${esc(S.ui.bozzaTipo||"")}">
+            <datalist id="tipi">${[...new Set(S.benchmarks.map(b=>b.tipo).filter(Boolean))]
+              .map(t=>`<option value="${esc(t)}">`).join("")}</datalist>
+          </label>
+          <label class="field"><span>Ambienti</span>
+            <select id="q-amb"><option value="">— scegli —</option>
+              ${S.ambienti.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join("")}
+            </select>
+          </label>
+          <label class="field"><span>Budget max €</span>
+            <input id="q-budget" inputmode="numeric" placeholder="900" style="max-width:130px"
+              value="${esc(S.ui.bozzaBudget||"")}">
+          </label>
+        </div>
+        <div class="row-tight" id="amb-scelti" style="margin-top:10px">
+          ${(S.ui.ambScelti||[]).map(id=>`<span class="chip">${esc(byId(S.ambienti,id)?.nome||id)}
+            <button data-act="rm-amb-bozza" data-id="${id}">×</button></span>`).join("")}
+        </div>
+        ${!AI.pronto?`<div class="note" style="margin-top:16px">
+          Il modello non è disponibile in questa vista: puoi comunque creare il benchmark
+          e compilarlo a mano, oppure metterlo in coda perché lo esegua io con la ricerca web vera.</div>`:""}
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="sec">
+      <div class="sec-head">
+        <h2 class="display" style="font-size:30px">Ultimi benchmark</h2>
+        <a href="#/benchmark" class="link">Vedi tutti</a>
+      </div>
+      ${recenti.length?`<div class="grid g4">${recenti.map(cardBench).join("")}</div>`
+        :`<div class="empty">${icona("altro","")}<div>Nessun benchmark. Comincia da qui sopra.</div></div>`}
+    </section>
+
+    <section class="sec" style="padding-top:0">
+      <div class="grid g2" style="gap:32px">
+        <div>
+          <div class="sec-head"><h2 class="display" style="font-size:26px">Ambienti</h2>
+            <a href="#/ambienti" class="link">Gestisci</a></div>
+          <div class="card pad0">
+            ${S.ambienti.slice(0,7).map(a=>{
+              const n=prodottiDiAmbiente(a.id).length;
+              return `<div class="lrow" style="padding:13px 18px;cursor:pointer" data-act="go" data-route="ambienti">
+                <div class="grow"><div>${esc(a.nome)}</div>
+                  <div class="tiny">${esc(a.note||"")}</div></div>
+                <div class="tiny num">${n} ${n===1?"prodotto":"prodotti"}</div></div>`}).join("")}
+          </div>
+        </div>
+        <div>
+          <div class="sec-head"><h2 class="display" style="font-size:26px">Da decidere</h2>
+            <span class="tiny num">${daDecidere.length}</span></div>
+          <div class="card">
+            ${daDecidere.length?daDecidere.slice(0,6).map(d=>`
+              <div class="lrow" style="align-items:flex-start">
+                <span style="color:var(--accent)">⚠</span>
+                <div class="grow"><div class="small">${esc(d.t)}</div>
+                  <div class="tiny">${esc(d.b.titolo)}</div></div></div>`).join("")
+              :`<div class="tiny">Nessun punto aperto. I dubbi che segno sui candidati compaiono qui.</div>`}
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="micro">Bonus mobili 2026</div>
+            <div class="row" style="margin-top:10px;align-items:baseline">
+              <div class="display num" style="font-size:26px">${eur(bonus)}</div>
+              <div class="tiny">di ${eur(PLAFOND_BONUS)}</div>
+            </div>
+            <div class="meter" style="margin-top:10px"><i class="${bonus>PLAFOND_BONUS?"over":""}"
+              style="width:${Math.min(100,bonus/PLAFOND_BONUS*100)}%"></i></div>
+            <div class="tiny" style="margin-top:10px">Speso complessivo ${eur(tot)}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>`;
+}
+
+function cardBench(b){
+  const v=vincitore(b); const st=STATI[b.stato]||STATI.bozza;
+  const fav=(b.candidati||[]).some(c=>c.preferito);
+  const acq=(b.candidati||[]).some(c=>c.acquistato);
+  return `<article class="bcard" data-act="go" data-route="b/${b.id}">
+    <div class="art">${icona(iconaPer(b.tipo||b.titolo))}${fav?'<span class="fav">♥</span>':""}</div>
+    <div class="body">
+      <div class="micro">${esc(b.tipo||"—")}</div>
+      <div class="serif" style="font-size:19px;line-height:1.25">${esc(b.titolo)}</div>
+      <div class="tiny">${esc(nomiAmbienti(b.ambienti)||"nessun ambiente")}</div>
+      <div style="flex:1"></div>
+      <div class="spread" style="margin-top:8px">
+        <div class="small num">${v?eur(num(v.prezzo)):"—"}</div>
+        <span class="badge ${acq?"b-acq":st.c}">${acq?"Acquistato":st.l}</span>
+      </div>
+      ${v&&v._p?`<div class="tiny num">${esc(v.marca||"")} ${esc(v.modello||"")} · ${v._p.toFixed(1)}/10</div>`:""}
+    </div>
+  </article>`;
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   ELENCO BENCHMARK — righe ordinabili
+   ════════════════════════════════════════════════════════════════════════ */
+function righeBenchmark(){
+  const f=S.ui.filtro; const out=[];
+  for(const b of S.benchmarks){
+    const cands=classifica(b);
+    const scelti=cands.filter(c=>c.preferito||c.acquistato);
+    const mostra=scelti.length?scelti:cands.slice(0,1);
+    for(const c of (mostra.length?mostra:[{nome:b.titolo}])){
+      const rank=cands.findIndex(x=>x.id===c.id);
+      out.push({
+        bid:b.id, cid:c.id, titolo:b.titolo, tipo:b.tipo||"",
+        marca:[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"—",
+        costo:num(c.prezzo), rank:rank>=0?rank+1:null, tot:cands.length,
+        data:b.data||"", ambiente:nomiAmbienti(b.ambienti), amb:b.ambienti||[],
+        dove:c.venditore||"", preferito:!!c.preferito, acquistato:!!c.acquistato,
+        stato:b.stato||"bozza",
+      });
+    }
+  }
+  return out.filter(r=>{
+    if(f.fav&&!r.preferito) return false;
+    if(f.acq&&!r.acquistato) return false;
+    if(f.amb&&!r.amb.includes(f.amb)) return false;
+    if(f.q){
+      const q=f.q.toLowerCase();
+      if(!(r.titolo+" "+r.marca+" "+r.tipo+" "+r.ambiente).toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function vElenco(){
+  const f=S.ui.filtro, o=S.ui.ordina;
+  const righe=sortBy(righeBenchmark(),o.k,o.d);
+  const th=(k,l,extra="")=>`<th class="sortable" data-act="ordina" data-k="${k}" ${extra}>${l}${
+    o.k===k?`<span style="opacity:.6"> ${o.d>0?"↑":"↓"}</span>`:""}</th>`;
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head">
+      <div><div class="micro">Archivio</div>
+        <h1 class="display" style="font-size:38px">I tuoi benchmark</h1></div>
+      <button class="btn sm" data-act="go" data-route="home">Nuovo benchmark</button>
+    </div>
+
+    <div class="row" style="margin-bottom:18px">
+      <input id="f-q" placeholder="Cerca prodotto, marca, ambiente…" value="${esc(f.q)}"
+        style="max-width:300px" data-act="filtro-q">
+      <select id="f-amb" data-act="filtro-amb" style="max-width:210px">
+        <option value="">Tutti gli ambienti</option>
+        ${S.ambienti.map(a=>`<option value="${a.id}" ${f.amb===a.id?"selected":""}>${esc(a.nome)}</option>`).join("")}
+      </select>
+      <span class="chip pick ${f.fav?"on":""}" data-act="filtro-fav">♥ Preferiti</span>
+      <span class="chip pick ${f.acq?"on":""}" data-act="filtro-acq">✓ Acquistati</span>
+      <div class="grow"></div>
+      <span class="tiny num">${righe.length} ${righe.length===1?"riga":"righe"}</span>
+    </div>
+
+    ${righe.length?`<div class="tscroll"><table>
+      <thead><tr>
+        ${th("data","Data")}${th("titolo","Prodotto")}${th("marca","Marca / Modello")}
+        ${th("costo","Costo")}${th("rank","Rank")}${th("ambiente","Ambiente")}${th("dove","Dove")}
+        <th style="width:70px"></th>
+      </tr></thead>
+      <tbody>${righe.map(r=>`
+        <tr class="clickable" data-act="go" data-route="b/${r.bid}">
+          <td class="num tiny">${dataIt(r.data)}</td>
+          <td><div>${esc(r.titolo)}</div><div class="tiny">${esc(r.tipo)}</div></td>
+          <td>${esc(r.marca)}</td>
+          <td class="num">${eur(r.costo)}</td>
+          <td>${r.rank?`<span class="rank ${r.rank===2?"r2":r.rank>2?"r3":""}">${r.rank}</span>
+            <span class="tiny num">/${r.tot}</span>`:"—"}</td>
+          <td class="small">${esc(r.ambiente||"—")}</td>
+          <td class="small">${esc(r.dove||"—")}</td>
+          <td style="text-align:right;white-space:nowrap">
+            ${r.preferito?'<span style="color:var(--accent)">♥</span>':""}
+            ${r.acquistato?'<span style="color:var(--green)">✓</span>':""}
+          </td>
+        </tr>`).join("")}</tbody>
+    </table></div>`:`<div class="empty">${icona("altro")}
+      <div style="margin-top:10px">Nessun benchmark corrisponde ai filtri.</div></div>`}
+  </section></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   DETTAGLIO BENCHMARK
+   ════════════════════════════════════════════════════════════════════════ */
+function vDettaglio(r){
+  const b=byId(S.benchmarks,r.id);
+  if(!b) return `<div class="wrap"><div class="empty">Benchmark non trovato.
+    <div style="margin-top:14px"><a href="#/benchmark" class="link">Torna all'elenco</a></div></div></div>`;
+  const cands=classifica(b);
+  const st=STATI[b.stato]||STATI.bozza;
+  const maxP=Math.max(...cands.map(c=>c._p||0),0.001);
+  const minPrezzo=Math.min(...cands.map(c=>num(c.prezzo)??Infinity));
+  const minTco=Math.min(...cands.map(c=>c._tco||Infinity));
+
+  const col=(fn)=>cands.map(fn).join("");
+  const riga=(label,fn,cls="")=>`<tr><td>${label}</td>${cands.map((c,i)=>
+    `<td class="${cls}">${fn(c,i)}</td>`).join("")}</tr>`;
+
+  const specKeys=[...new Set(cands.flatMap(c=>(c.specs||[]).map(s=>s.k)))];
+
+  return `<div class="wrap"><section class="sec">
+    <div class="row" style="margin-bottom:18px">
+      <a href="#/benchmark" class="link">← Benchmark</a>
+      <div class="grow"></div>
+      <span class="tiny num">#${esc(b.id)} · ${dataIt(b.data)}</span>
+    </div>
+
+    <div class="spread" style="align-items:flex-start;margin-bottom:8px">
+      <div>
+        <div class="micro">${esc(b.tipo||"Prodotto")} · ${b.categoria==="servizio"?"Servizio":"Prodotto"}</div>
+        <h1 class="display" style="font-size:clamp(30px,5vw,46px);margin-top:6px">${esc(b.titolo)}</h1>
+      </div>
+      <div class="row-tight">
+        <span class="badge ${st.c}">${st.l}</span>
+        <button class="btn ghost sm" data-act="edit-bench" data-id="${b.id}">Modifica</button>
+      </div>
+    </div>
+
+    <div class="row-tight" style="margin:14px 0 6px">
+      ${(b.ambienti||[]).map(id=>`<span class="chip">${esc(byId(S.ambienti,id)?.nome||id)}
+        <button data-act="rm-amb" data-b="${b.id}" data-id="${id}" title="Rimuovi">×</button></span>`).join("")}
+      <span class="chip pick soft" data-act="add-amb" data-b="${b.id}">+ ambiente</span>
+      ${b.bonusMobili?'<span class="chip soft">bonus mobili</span>':""}
+    </div>
+
+    ${b.esigenza?`<p class="lead" style="max-width:720px;margin-top:14px">${esc(b.esigenza)}</p>`:""}
+    ${b.vincoli?`<div class="note" style="margin-top:14px">${esc(b.vincoli)}</div>`:""}
+
+    ${b.stato==="attesa"?`<div class="note" style="margin-top:18px">
+      <strong>In coda per la ricerca reale.</strong> Il job è scritto nell'archivio:
+      alla prossima sessione lo eseguo con la ricerca web e riscrivo qui prezzi,
+      punteggi e fonti verificate.</div>`:""}
+
+    ${cands.length?`
+    <div style="margin:28px 0 10px" class="spread">
+      <div class="micro micro-ink">Comparativa · ${cands.length} candidati</div>
+      <div class="row-tight">
+        <button class="btn ghost xs" data-act="job-verifica" data-b="${b.id}">⟳ Verifica prezzi con ricerca reale</button>
+        <button class="btn ghost xs" data-act="add-cand" data-b="${b.id}">+ candidato</button>
+      </div>
+    </div>
+    <div class="tscroll"><table class="cmp">
+      <thead><tr><th></th>${cands.map((c,i)=>`<th>
+        <div class="row-tight" style="margin-bottom:4px">
+          <span class="rank ${i===1?"r2":i>1?"r3":""}">${i+1}</span>
+          ${c.preferito?'<span style="color:var(--accent)">♥</span>':""}
+          ${c.acquistato?'<span style="color:var(--green)">✓</span>':""}
+        </div>
+        <div class="cand-head">${esc(c.marca||"")} ${esc(c.modello||c.nome||"")}</div>
+      </th>`).join("")}</tr></thead>
+      <tbody>
+        <tr><td>Punteggio</td>${cands.map(c=>`<td class="${c._p&&c._p>=maxP?"best":""}">
+          <span class="num" style="font-size:16px">${c._p?c._p.toFixed(1):"—"}</span>
+          ${c._p?`<div class="score-bar"><i style="width:${c._p*10}%"></i></div>`:""}
+        </td>`).join("")}</tr>
+        ${riga("Prezzo",c=>{const p=num(c.prezzo);
+          return `<span class="num ${p===minPrezzo?"":""}">${eur(p)}</span>`})}
+        ${riga("TCO 10 anni",c=>`<span class="num">${c._tco?eur(c._tco):"—"}</span>`)}
+        ${riga("Venditore",c=>esc(c.venditore||"—"))}
+        <tr><td colspan="${cands.length+1}" style="background:var(--sand);padding:7px 14px"
+          class="micro">Criteri</td></tr>
+        ${CRITERI.map(cr=>riga(cr.label,c=>{
+          const v=c.punteggi?.[cr.k];
+          return v==null||v===""?"—":`<span class="num">${v}</span><span class="tiny">/10</span>`;
+        })).join("")}
+        ${specKeys.length?`<tr><td colspan="${cands.length+1}" style="background:var(--sand);padding:7px 14px"
+          class="micro">Specifiche</td></tr>`:""}
+        ${specKeys.map(k=>riga(esc(k),c=>{
+          const s=(c.specs||[]).find(x=>x.k===k); return esc(s?.v||"—");
+        })).join("")}
+        <tr><td colspan="${cands.length+1}" style="background:var(--sand);padding:7px 14px"
+          class="micro">Giudizio</td></tr>
+        ${riga("Pro",c=>(c.pro||[]).map(p=>`<div class="tiny">+ ${esc(p)}</div>`).join("")||"—")}
+        ${riga("Contro",c=>(c.contro||[]).map(p=>`<div class="tiny">− ${esc(p)}</div>`).join("")||"—")}
+        ${riga("Garanzia",c=>c.garanziaMesi?esc(c.garanziaMesi)+" mesi":"—")}
+        <tr><td colspan="${cands.length+1}" style="background:var(--sand);padding:7px 14px"
+          class="micro">Azioni</td></tr>
+        <tr><td>Preferito / Acquistato</td>${cands.map(c=>`<td>
+          <div class="row-tight">
+            <button class="btn ${c.preferito?"":"ghost"} xs" data-act="fav" data-b="${b.id}" data-c="${c.id}">
+              ${c.preferito?"♥":"♡"}</button>
+            <button class="btn ${c.acquistato?"":"ghost"} xs" data-act="acq" data-b="${b.id}" data-c="${c.id}">
+              ${c.acquistato?"✓ preso":"acquistato"}</button>
+          </div></td>`).join("")}</tr>
+        <tr><td>Cerca online</td>${cands.map(c=>`<td>
+          <div class="stack" style="--gap:6px">
+            <a class="link q" href="${qNegozi(c)}" target="_blank" rel="noopener">Cerca dove acquistare</a><br>
+            <a class="link q" href="${qDove(c)}" target="_blank" rel="noopener">Confronta prezzi</a><br>
+            <a class="link q" href="${qRecensioni(c)}" target="_blank" rel="noopener">Cerca info e recensioni</a>
+          </div></td>`).join("")}</tr>
+        <tr><td>Tuoi link</td>${cands.map(c=>`<td>
+          ${(c.link||[]).map((l,i)=>`<div class="tiny" style="margin-bottom:4px">
+            <a href="${esc(l)}" target="_blank" rel="noopener" style="text-decoration:underline">
+              ${esc(l.replace(/^https?:\/\/(www\.)?/,"").slice(0,28))}…</a>
+            <button class="chip" style="border:0;padding:0 4px" data-act="rm-link"
+              data-b="${b.id}" data-c="${c.id}" data-i="${i}">×</button></div>`).join("")}
+          <button class="link q" data-act="add-link" data-b="${b.id}" data-c="${c.id}">+ aggiungi link</button>
+        </td>`).join("")}</tr>
+        <tr><td>Scheda</td>${cands.map(c=>`<td>
+          <button class="link q" data-act="edit-cand" data-b="${b.id}" data-c="${c.id}">Apri e modifica</button>
+        </td>`).join("")}</tr>
+      </tbody>
+    </table></div>
+
+    ${cands.some(c=>c.fonti?.length)?`<div class="card flat" style="margin-top:18px">
+      <div class="micro">Fonti dichiarate</div>
+      <div class="tiny" style="margin-top:8px">${cands.flatMap(c=>c.fonti||[])
+        .filter((v,i,a)=>a.indexOf(v)===i).map(esc).join(" · ")}</div></div>`:""}
+    `:`<div class="empty" style="border:1px solid var(--line);border-radius:2px;margin-top:24px">
+      ${icona(iconaPer(b.tipo||b.titolo))}
+      <div style="margin-top:12px">Nessun candidato ancora.</div>
+      <div class="row" style="justify-content:center;margin-top:16px">
+        ${AI.pronto?`<button class="btn sm" data-act="genera" data-b="${b.id}">Genera 5 candidati</button>`:""}
+        <button class="btn ghost sm" data-act="job-verifica" data-b="${b.id}">Metti in coda per la ricerca reale</button>
+        <button class="btn ghost sm" data-act="add-cand" data-b="${b.id}">Aggiungi a mano</button>
+      </div></div>`}
+
+    <div style="margin-top:44px">
+      <div class="sec-head"><h2 class="display" style="font-size:26px">Domande su questo benchmark</h2>
+        <span class="tiny">${(b.chat||[]).length} messaggi salvati</span></div>
+      ${chatHTML("bench:"+b.id,"chat-embed")}
+    </div>
+  </section></div>`;
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   AMBIENTI
+   ════════════════════════════════════════════════════════════════════════ */
+function vAmbienti(){
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head">
+      <div><div class="micro">La casa</div>
+        <h1 class="display" style="font-size:38px">Ambienti</h1></div>
+      <button class="btn sm" data-act="add-ambiente">Nuovo ambiente</button>
+    </div>
+    <p class="lead" style="max-width:680px;margin-bottom:28px">
+      Un benchmark può appartenere a più ambienti. Rinomina, aggiungi o elimina:
+      i tag sui benchmark si aggiornano ovunque.</p>
+
+    <div class="grid g2">${S.ambienti.map(a=>{
+      const prod=prodottiDiAmbiente(a.id);
+      const spesa=prod.reduce((s,p)=>s+(p.v?.acquistato?(num(p.v.prezzoPagato)??num(p.v.prezzo)??0):0),0);
+      return `<div class="card">
+        <div class="spread" style="align-items:flex-start">
+          <div>
+            <div class="serif" style="font-size:22px">${esc(a.nome)}</div>
+            <div class="tiny">${esc(a.note||"")}</div>
+          </div>
+          <div class="row-tight">
+            <button class="link q" data-act="edit-ambiente" data-id="${a.id}">Modifica</button>
+            <button class="link q" style="color:var(--danger)" data-act="del-ambiente" data-id="${a.id}">Elimina</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px;gap:18px">
+          <div><div class="micro">Prodotti</div><div class="num">${prod.length}</div></div>
+          <div><div class="micro">Acquistato</div><div class="num">${eur(spesa)}</div></div>
+          ${a.budget?`<div><div class="micro">Budget</div><div class="num">${eur(num(a.budget))}</div></div>`:""}
+        </div>
+        ${prod.length?`<div style="margin-top:14px;border-top:1px solid var(--line2);padding-top:6px">
+          ${prod.slice(0,6).map(p=>`<div class="lrow" style="padding:9px 0;cursor:pointer"
+            data-act="go" data-route="b/${p.b.id}">
+            <div class="grow"><div class="small">${esc(p.b.titolo)}</div>
+              <div class="tiny">${esc([p.v?.marca,p.v?.modello].filter(Boolean).join(" ")||"nessun candidato")}</div></div>
+            <div class="tiny num">${p.v?eur(num(p.v.prezzo)):"—"}</div>
+            ${p.v?.acquistato?'<span style="color:var(--green)">✓</span>':p.v?.preferito?'<span style="color:var(--accent)">♥</span>':""}
+          </div>`).join("")}
+          ${prod.length>6?`<div class="tiny" style="padding-top:6px">+ altri ${prod.length-6}</div>`:""}
+        </div>`:`<div class="tiny" style="margin-top:14px">Nessun prodotto associato.</div>`}
+      </div>`}).join("")}</div>
+  </section></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ACQUISTI
+   ════════════════════════════════════════════════════════════════════════ */
+function vAcquisti(){
+  const righe=[];
+  for(const b of S.benchmarks) for(const c of (b.candidati||[])){
+    if(!c.acquistato&&!c.preferito) continue;
+    righe.push({b,c,prezzo:num(c.prezzoPagato)??num(c.prezzo),
+      stato:c.acquistato?"acquistato":"shortlist"});
+  }
+  const acq=righe.filter(r=>r.stato==="acquistato");
+  const {tot,bonus}=speseTotali();
+  const perAmb={};
+  for(const r of acq) for(const id of (r.b.ambienti||[]))
+    perAmb[id]=(perAmb[id]||0)+(r.prezzo||0);
+
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head">
+      <div><div class="micro">Spesa e plafond</div>
+        <h1 class="display" style="font-size:38px">Acquisti</h1></div>
+    </div>
+
+    <div class="grid g3" style="margin-bottom:32px">
+      <div class="card"><div class="micro">Totale acquistato</div>
+        <div class="display num" style="font-size:34px;margin-top:6px">${eur(tot)}</div>
+        <div class="tiny">${acq.length} ${acq.length===1?"prodotto":"prodotti"}</div></div>
+      <div class="card"><div class="micro">Bonus mobili 2026</div>
+        <div class="display num" style="font-size:34px;margin-top:6px">${eur(bonus)}</div>
+        <div class="meter" style="margin-top:10px"><i class="${bonus>PLAFOND_BONUS?"over":""}"
+          style="width:${Math.min(100,bonus/PLAFOND_BONUS*100)}%"></i></div>
+        <div class="tiny" style="margin-top:8px">Plafond ${eur(PLAFOND_BONUS)} · detrazione 50% in 10 quote</div></div>
+      <div class="card"><div class="micro">In shortlist</div>
+        <div class="display num" style="font-size:34px;margin-top:6px">
+          ${eur(righe.filter(r=>r.stato==="shortlist").reduce((s,r)=>s+(r.prezzo||0),0))}</div>
+        <div class="tiny">${righe.length-acq.length} da confermare</div></div>
+    </div>
+
+    ${righe.length?`<div class="tscroll"><table>
+      <thead><tr><th>Prodotto</th><th>Marca / Modello</th><th>Ambiente</th><th>Prezzo</th>
+        <th>Venditore</th><th>Bonus</th><th>Stato</th></tr></thead>
+      <tbody>${sortBy(righe,"stato").map(r=>`<tr class="clickable" data-act="go" data-route="b/${r.b.id}">
+        <td>${esc(r.b.titolo)}</td>
+        <td>${esc([r.c.marca,r.c.modello].filter(Boolean).join(" ")||r.c.nome||"—")}</td>
+        <td class="small">${esc(nomiAmbienti(r.b.ambienti)||"—")}</td>
+        <td class="num">${eur(r.prezzo)}</td>
+        <td class="small">${esc(r.c.venditore||"—")}</td>
+        <td>${r.b.bonusMobili?"sì":"—"}</td>
+        <td><span class="badge ${r.stato==="acquistato"?"b-acq":"b-cor"}">
+          ${r.stato==="acquistato"?"Acquistato":"Preferito"}</span></td>
+      </tr>`).join("")}</tbody></table></div>`
+      :`<div class="empty">${icona("altro")}<div style="margin-top:10px">
+        Nessun prodotto marcato come preferito o acquistato.</div></div>`}
+
+    ${Object.keys(perAmb).length?`<div style="margin-top:36px">
+      <div class="sec-head"><h2 class="display" style="font-size:24px">Spesa per ambiente</h2></div>
+      <div class="card">${Object.entries(perAmb).sort((a,b)=>b[1]-a[1]).map(([id,v])=>`
+        <div class="lrow"><div class="grow">${esc(byId(S.ambienti,id)?.nome||id)}</div>
+          <div class="num">${eur(v)}</div></div>`).join("")}</div></div>`:""}
+
+    <div class="note" style="margin-top:28px">
+      Bonus mobili: valido su acquisti 2026 collegati a lavori edilizi iniziati dal 1° gennaio 2025
+      e comunque prima dell'acquisto, con pagamento tracciabile intestato a chi detrae.
+      Trasporto e montaggio rientrano nel tetto. Porte e sanitari no. Verifica con il commercialista.
+    </div>
+  </section></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   DOCUMENTAZIONE
+   ════════════════════════════════════════════════════════════════════════ */
+function vDocumenti(){
+  const cart=S.ui.cartella;
+  const docs=S.documenti.filter(d=>cart==="tutte"||d.cartella===cart)
+    .filter(d=>!S.ui.filtroDoc||((d.nome+" "+(d.scheda?.riassunto||"")+" "+(d.scheda?.fornitore||""))
+      .toLowerCase().includes(S.ui.filtroDoc.toLowerCase())));
+  const conteggio=id=>S.documenti.filter(d=>d.cartella===id).length;
+
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head">
+      <div><div class="micro">Archivio di progetto</div>
+        <h1 class="display" style="font-size:38px">Documentazione</h1></div>
+      <span class="tiny num">${S.documenti.length} file</span>
+    </div>
+
+    <div class="sidebar-layout">
+      <aside>
+        <div class="micro" style="margin-bottom:8px">Cartelle</div>
+        <div class="folder ${cart==="tutte"?"on":""}" data-act="cartella" data-id="tutte">
+          <span>Tutte</span><span class="tiny num">${S.documenti.length}</span></div>
+        ${S.cartelle.map(c=>`<div class="folder ${cart===c.id?"on":""}" data-act="cartella" data-id="${c.id}">
+          <span>${esc(c.nome)}</span><span class="tiny num">${conteggio(c.id)}</span></div>`).join("")}
+        <button class="link q" style="margin-top:12px" data-act="add-cartella">+ nuova cartella</button>
+      </aside>
+
+      <div>
+        <div id="dropzone" class="drop" data-act="upload">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.2" style="opacity:.5"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <div style="margin-top:10px;font-size:15px">Trascina qui i file, oppure fai click per aprire
+            ${navigator.platform?.toLowerCase().includes("mac")?"il Finder":"Esplora risorse"}</div>
+          <div class="tiny" style="margin-top:6px">PDF, immagini, testo, fogli · planimetrie, atti, fatture, preventivi</div>
+        </div>
+        <input type="file" id="fileinput" multiple class="hide">
+
+        <div class="row" style="margin:20px 0 14px">
+          <input placeholder="Cerca nel contenuto indicizzato…" value="${esc(S.ui.filtroDoc||"")}"
+            data-act="filtro-doc" style="max-width:340px">
+          <div class="grow"></div>
+          <span class="tiny num">${docs.length} in questa vista</span>
+        </div>
+
+        ${docs.length?`<div class="tscroll"><table>
+          <thead><tr><th>Documento</th><th>Cartella</th><th>Estratto</th><th>Importo</th>
+            <th>Data</th><th style="width:40px"></th></tr></thead>
+          <tbody>${sortBy(docs,"caricato",-1).map(d=>`<tr>
+            <td>
+              <div class="row-tight">
+                <span style="width:15px;color:var(--muted)">${d.superato?"⊘":"▤"}</span>
+                <div><div>${esc(d.nome)}</div>
+                  <div class="tiny">${d.dim?(d.dim/1024).toFixed(0)+" KB":""}
+                  ${d.superato?" · superato da una versione più recente":""}
+                  ${d.stato==="da-indicizzare"?" · da indicizzare":""}</div></div>
+              </div>
+            </td>
+            <td><select data-act="sposta-doc" data-id="${d.id}" style="font-size:12px;padding:5px 24px 5px 8px">
+              ${S.cartelle.map(c=>`<option value="${c.id}" ${d.cartella===c.id?"selected":""}>${esc(c.nome)}</option>`).join("")}
+            </select></td>
+            <td class="small">${esc(d.scheda?.fornitore||d.scheda?.oggetto||d.scheda?.tipo||"—")}</td>
+            <td class="num">${d.scheda?.totale?eur(num(d.scheda.totale)):"—"}</td>
+            <td class="num tiny">${dataIt(d.scheda?.data||d.caricato)}</td>
+            <td style="text-align:right">
+              <button class="link q" data-act="apri-doc" data-id="${d.id}">apri</button></td>
+          </tr>`).join("")}</tbody></table></div>`
+          :`<div class="empty">${icona("doc")}<div style="margin-top:10px">
+            Nessun documento in questa cartella.</div></div>`}
+
+        <div class="note" style="margin-top:22px">
+          <strong>Come risparmio token.</strong> Al caricamento estraggo il testo una volta sola e ne
+          ricavo una scheda (tipo, fornitore, oggetto, imponibile, IVA, totale, data, riassunto).
+          Quando mi chiedi un preventivo leggo la scheda, non il PDF: se me lo richiedi domani
+          non rielaboro niente. Il file identico viene scartato, e un preventivo più recente dello
+          stesso fornitore manda il precedente in stato «superato», fuori dal contesto della chat.
+        </div>
+      </div>
+    </div>
+  </section></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   IMPOSTAZIONI
+   ════════════════════════════════════════════════════════════════════════ */
+function vImpostazioni(){
+  const jobs=sortBy(S.coda,"creato",-1);
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head"><div><div class="micro">Configurazione</div>
+      <h1 class="display" style="font-size:38px">Impostazioni</h1></div></div>
+
+    <div class="grid g2">
+      <div class="card">
+        <div class="micro">Pesi dei criteri</div>
+        <p class="tiny" style="margin:8px 0 16px">Il punteggio finale è la media ponderata dei criteri
+          valorizzati. I criteri senza valore non entrano nel calcolo.</p>
+        ${CRITERI.map(c=>`<div class="lrow" style="padding:9px 0">
+          <div class="grow small">${c.label}</div>
+          <input type="range" min="0" max="5" step="1" value="${S.cfg.pesi[c.k]??c.peso}"
+            data-act="peso" data-k="${c.k}" style="width:120px;padding:0">
+          <span class="num tiny" style="width:14px">${S.cfg.pesi[c.k]??c.peso}</span>
+        </div>`).join("")}
+      </div>
+
+      <div class="stack" style="--gap:20px">
+        <div class="card">
+          <div class="micro">Archivio</div>
+          <div class="small" style="margin-top:10px">
+            Backend attivo: <strong>${Store.backend==="db"?"database dell'artifact (server)":"memoria del browser"}</strong>
+          </div>
+          <div class="tiny" style="margin-top:6px">
+            ${Store.backend==="db"
+              ? "I dati vivono sul server: li ritrovi su PC e telefono con lo stesso account, e posso leggerli e scriverli io da Claude Code."
+              : "I dati vivono solo in questo browser: un altro dispositivo vedrà l'app vuota. Esporta spesso."}
+          </div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn ghost sm" data-act="export">Esporta JSON</button>
+            <button class="btn ghost sm" data-act="import">Importa JSON</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="micro">Modello per la chat</div>
+          <div class="row" style="margin-top:12px">
+            ${[["quick","Rapido"],["default","Standard"],["complex","Approfondito"]].map(([v,l])=>
+              `<span class="chip pick ${S.cfg.tier===v?"on":""}" data-act="tier" data-v="${v}">${l}</span>`).join("")}
+          </div>
+          <div class="tiny" style="margin-top:10px">
+            In fase 1 il modello si sceglie per livello. In fase 2, con le chiamate API,
+            diventano nomi espliciti: Haiku 4.5, Sonnet 5, Opus 5.
+            ${AI.pronto?"":"<br><strong>Al momento il modello non è raggiungibile in questa vista.</strong>"}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="micro">Tema</div>
+          <div class="row" style="margin-top:12px">
+            ${[["auto","Automatico"],["light","Chiaro"],["dark","Scuro"]].map(([v,l])=>
+              `<span class="chip pick ${S.cfg.tema===v?"on":""}" data-act="tema" data-v="${v}">${l}</span>`).join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:36px">
+      <div class="sec-head"><h2 class="display" style="font-size:24px">Coda dei lavori</h2>
+        <span class="tiny">${jobs.filter(j=>j.stato==="nuovo").length} da eseguire</span></div>
+      <p class="lead" style="max-width:720px;margin-bottom:18px">
+        Qui finiscono le richieste che hanno bisogno della ricerca web vera, che dentro questa
+        pagina non esiste. Le eseguo io in Claude Code e riscrivo il risultato nell'archivio.
+        Domani lo stesso identico contratto lo consuma un processo automatico su Vercel:
+        il frontend non cambia di una riga.</p>
+      ${jobs.length?`<div class="tscroll"><table>
+        <thead><tr><th>Creato</th><th>Tipo</th><th>Oggetto</th><th>Stato</th><th style="width:40px"></th></tr></thead>
+        <tbody>${jobs.map(j=>`<tr>
+          <td class="num tiny">${dataIt(j.creato)}</td>
+          <td class="small">${esc(j.tipo)}</td>
+          <td class="small">${esc(j.titolo||j.ref||"—")}</td>
+          <td><span class="badge ${j.stato==="fatto"?"b-fat":j.stato==="nuovo"?"b-cor":"b-att"}">${esc(j.stato)}</span></td>
+          <td style="text-align:right"><button class="link q" data-act="del-job" data-id="${j.id}">×</button></td>
+        </tr>`).join("")}</tbody></table></div>`
+        :`<div class="card flat"><div class="tiny">Nessun lavoro in coda.</div></div>`}
+    </div>
+  </section></div>`;
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   CHAT — due superfici, una sola implementazione.
+   'globale'      → overlay presente su ogni pagina, non perde il contesto
+   'bench:<id>'   → Q&A incorporata, salvata dentro il benchmark
+   ════════════════════════════════════════════════════════════════════════ */
+const Chat={
+  busy:{}, bozze:{}, ctl:{},
+
+  messaggi(scope){
+    if(scope==="globale") return S.chatGlobale.messaggi||[];
+    const b=byId(S.benchmarks,scope.slice(6));
+    return b?(b.chat||[]):[];
+  },
+  async salva(scope,msgs){
+    const tagliati=msgs.slice(-60);
+    if(scope==="globale"){
+      S.chatGlobale.messaggi=tagliati;
+      await Store.set("chat/globale",{messaggi:tagliati});
+    }else{
+      const b=byId(S.benchmarks,scope.slice(6));
+      if(!b) return;
+      b.chat=tagliati;
+      await Store.set("benchmark/"+b.id,scrivibile(b));
+    }
+  },
+
+  /* contesto compatto: le schede, mai i documenti interi */
+  contesto(scope){
+    const L=[];
+    L.push("Sei l'assistente del progetto casa di via Raviola 32 a Mezzocammino (Roma).");
+    L.push("Rispondi in italiano, diretto, senza adulazione e senza ripetere la domanda.");
+    L.push("Non hai accesso a internet: se un dato richiede una verifica online, dillo e");
+    L.push("suggerisci di mettere il benchmark in coda per la ricerca reale.");
+    L.push("Non inventare prezzi, misure o fonti: se non li hai, dichiaralo.");
+    L.push("");
+    L.push("AMBIENTI:");
+    for(const a of S.ambienti) L.push(`- ${a.nome}${a.note?" ("+a.note+")":""}`);
+
+    if(scope.startsWith("bench:")){
+      const b=byId(S.benchmarks,scope.slice(6));
+      if(b){
+        L.push("","BENCHMARK IN CORSO: "+b.titolo+" — tipo "+(b.tipo||"n.d.")+
+          " — ambienti: "+(nomiAmbienti(b.ambienti)||"nessuno"));
+        if(b.esigenza) L.push("Esigenza: "+b.esigenza);
+        if(b.vincoli) L.push("Vincoli: "+b.vincoli);
+        L.push("CANDIDATI:");
+        for(const c of classifica(b)){
+          L.push(`- ${c.marca||""} ${c.modello||c.nome||""} | prezzo ${c.prezzo||"n.d."} | `+
+            `punteggio ${c._p?c._p.toFixed(1):"n.d."} | venditore ${c.venditore||"n.d."}`+
+            (c.preferito?" | PREFERITO":"")+(c.acquistato?" | ACQUISTATO":""));
+          for(const s of (c.specs||[]).slice(0,6)) L.push(`    ${s.k}: ${s.v}`);
+          if(c.pro?.length) L.push("    pro: "+c.pro.join("; "));
+          if(c.contro?.length) L.push("    contro: "+c.contro.join("; "));
+          if(c.link?.length) L.push("    link forniti dall'utente: "+c.link.join(" "));
+        }
+      }
+    }else{
+      L.push("","BENCHMARK ARCHIVIATI:");
+      for(const b of sortBy(S.benchmarks,"data",-1).slice(0,40)){
+        const v=vincitore(b);
+        L.push(`- ${b.titolo} (${b.tipo||"n.d."}, ${nomiAmbienti(b.ambienti)||"—"}, ${b.data||""}) `+
+          `→ ${v?`${v.marca||""} ${v.modello||""} ${v.prezzo?v.prezzo+" €":""}`:"nessun candidato"}`+
+          (v?.acquistato?" [acquistato]":v?.preferito?" [preferito]":""));
+      }
+      const docs=S.documenti.filter(d=>!d.superato);
+      if(docs.length){
+        L.push("","SCHEDE DEI DOCUMENTI (già estratte: usa queste, non chiedere di rileggere i file):");
+        for(const d of docs.slice(0,60)){
+          const s=d.scheda||{};
+          L.push(`- [${d.id}] ${d.nome} | cartella ${carNome(d.cartella)} | tipo ${s.tipo||"n.d."}`+
+            ` | fornitore ${s.fornitore||"n.d."} | oggetto ${s.oggetto||"n.d."}`+
+            ` | totale ${s.totale||"n.d."} | data ${s.data||d.caricato||"n.d."}`);
+          if(s.riassunto) L.push("    "+String(s.riassunto).slice(0,220));
+        }
+        L.push("Se serve il testo integrale di un documento, dillo indicando il suo [id]: te lo apro io.");
+      }
+      const {tot,bonus}=speseTotali();
+      L.push("",`SPESA: acquistato ${tot} € — di cui in bonus mobili ${bonus} € su un plafond di ${PLAFOND_BONUS} €.`);
+    }
+    let t=L.join("\n");
+    if(t.length>14000) t=t.slice(0,14000)+"\n[…contesto troncato]";
+    return t;
+  },
+
+  async invia(scope){
+    const testo=(this.bozze[scope]||"").trim();
+    if(!testo||this.busy[scope]) return;
+    const msgs=[...this.messaggi(scope),{r:"me",t:testo,d:new Date().toISOString()}];
+    this.bozze[scope]=""; this.busy[scope]=true;
+    await this.salva(scope,msgs); renderChat();
+
+    if(!AI.pronto){
+      this.busy[scope]=false;
+      await this.salva(scope,[...msgs,{r:"err",t:"Il modello non è raggiungibile in questa vista.",d:new Date().toISOString()}]);
+      renderChat(); return;
+    }
+    const turni=[{role:"user",content:this.contesto(scope)}];
+    for(const m of msgs.slice(-14)){
+      if(m.r==="err") continue;
+      turni.push({role:m.r==="me"?"user":"assistant",content:m.t});
+    }
+    if(turni[turni.length-1].role!=="user") turni.push({role:"user",content:testo});
+
+    const ctl=new AbortController(); this.ctl[scope]=ctl;
+    let parziale="";
+    try{
+      const t=await AI.testo(turni,{tier:S.cfg.tier,signal:ctl.signal,
+        onText:({text})=>{ parziale=text; const body=document.querySelector(`[data-chatbody="${scope}"]`);
+          if(body){ const last=body.querySelector(".streaming");
+            if(last){ last.innerHTML=md(text); body.scrollTop=body.scrollHeight } } }});
+      this.busy[scope]=false;
+      await this.salva(scope,[...msgs,{r:"ai",t,d:new Date().toISOString()}]);
+    }catch(e){
+      this.busy[scope]=false;
+      const keep=e?.text||parziale;
+      const add=[...msgs];
+      if(keep) add.push({r:"ai",t:keep,d:new Date().toISOString()});
+      if(e?.code!=="cancelled") add.push({r:"err",t:AI.copy(e),d:new Date().toISOString()});
+      await this.salva(scope,add);
+    }
+    renderChat();
+  },
+};
+const carNome=id=>byId(S.cartelle,id)?.nome||id||"—";
+
+function chatHTML(scope,cls=""){
+  const msgs=Chat.messaggi(scope);
+  const busy=Chat.busy[scope];
+  const glob=scope==="globale";
+  return `<div class="chat ${cls}" data-chat="${scope}">
+    <div class="chat-head">
+      <div class="row-tight">
+        <span class="micro micro-ink">${glob?"Assistente casa":"Q&A benchmark"}</span>
+      </div>
+      <div class="row-tight">
+        <select data-act="tier-sel" style="font-size:11px;padding:4px 22px 4px 8px;width:auto;border-color:transparent;background:transparent">
+          <option value="quick" ${S.cfg.tier==="quick"?"selected":""}>Rapido</option>
+          <option value="default" ${S.cfg.tier==="default"?"selected":""}>Standard</option>
+          <option value="complex" ${S.cfg.tier==="complex"?"selected":""}>Approfondito</option>
+        </select>
+        ${glob?`<button class="iconbtn" style="width:28px;height:28px" data-act="chiudi-chat" aria-label="Chiudi">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5l14 14M19 5L5 19"/></svg></button>`:""}
+      </div>
+    </div>
+    <div class="chat-body" data-chatbody="${scope}">
+      ${msgs.length?msgs.map(m=>{
+        if(m.r==="me") return `<div class="msg me">${esc(m.t)}</div>`;
+        if(m.r==="err") return `<div class="msg err">${esc(m.t)}</div>`;
+        return `<div class="msg ai"><div class="who">Claude</div>${md(m.t)}</div>`;
+      }).join(""):`<div class="tiny" style="margin:auto;text-align:center;max-width:260px">
+        ${glob?"Chiedimi di cercare un documento, il totale di un preventivo, o cosa manca in un ambiente."
+              :"Chiedimi di approfondire i candidati: differenze reali, difetti ricorrenti, cosa verificare prima di comprare."}
+        <br><br>Le risposte restano salvate qui.</div>`}
+      ${busy?`<div class="msg ai"><div class="who">Claude</div>
+        <div class="streaming"><span class="typing"><i></i><i></i><i></i></span></div></div>`:""}
+    </div>
+    <div class="chat-foot">
+      <div class="row">
+        <textarea class="grow" data-act="chat-input" data-scope="${scope}" rows="1"
+          style="min-height:42px;max-height:130px;padding:10px 12px"
+          placeholder="Scrivi una domanda…">${esc(Chat.bozze[scope]||"")}</textarea>
+        ${busy?`<button class="btn ghost sm" data-act="stop-chat" data-scope="${scope}">Stop</button>`
+              :`<button class="btn sm" data-act="chat-send" data-scope="${scope}">Invia</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderChat(){
+  const m=$("#chatmount");
+  const emb=document.querySelector('[data-chat^="bench:"]');
+  if(emb){
+    const scope=emb.getAttribute("data-chat");
+    const nuovo=document.createElement("div"); nuovo.innerHTML=chatHTML(scope,"chat-embed");
+    emb.replaceWith(nuovo.firstElementChild);
+    const b=document.querySelector(`[data-chatbody="${scope}"]`); if(b) b.scrollTop=b.scrollHeight;
+  }
+  if(S.ui.chatAperta){
+    m.innerHTML=`<div class="overlay-chat">${chatHTML("globale")}</div>`;
+    const b=document.querySelector('[data-chatbody="globale"]'); if(b) b.scrollTop=b.scrollHeight;
+  }else{
+    const n=Chat.messaggi("globale").length;
+    m.innerHTML=`<button class="fab" data-act="apri-chat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.3 9.3 0 0 1-3-.5L4 21l1.6-4.4A8.2 8.2 0 0 1 4 11.5 8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z"/></svg>
+      Chiedi${n?` · ${n}`:""}</button>`;
+  }
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   PERSISTENZA ENTITÀ + MODALI
+   ════════════════════════════════════════════════════════════════════════ */
+const scrivibile=o=>{const c=clone(o); delete c.id; return c};
+
+async function salvaBench(b){
+  const i=S.benchmarks.findIndex(x=>x.id===b.id);
+  if(i<0) S.benchmarks.push(b); else S.benchmarks[i]=b;
+  await Store.set("benchmark/"+b.id,scrivibile(b));
+}
+async function salvaDoc(d){
+  const i=S.documenti.findIndex(x=>x.id===d.id);
+  if(i<0) S.documenti.push(d); else S.documenti[i]=d;
+  await Store.set("documenti/"+d.id,scrivibile(d));
+}
+async function nuovoJob(tipo,payload){
+  const j={id:uid(),tipo,stato:"nuovo",creato:new Date().toISOString(),...payload};
+  S.coda.push(j); await Store.set("coda/"+j.id,scrivibile(j)); return j;
+}
+
+/* ---- modale generica ---- */
+let _modaleSalva=null;
+function modale({titolo,campi,salva,nota}){
+  _modaleSalva=salva;
+  $("#modalmount").innerHTML=`<div class="scrim" data-act="chiudi-modale-bg">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="serif" style="font-size:21px">${esc(titolo)}</div>
+        <button class="iconbtn" data-act="chiudi-modale" aria-label="Chiudi">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </div>
+      <div class="modal-body stack" style="--gap:16px">
+        ${nota?`<div class="note">${nota}</div>`:""}
+        ${campi.map(c=>campoHTML(c)).join("")}
+        <div class="row" style="justify-content:flex-end;padding-top:8px">
+          <button class="btn ghost sm" data-act="chiudi-modale">Annulla</button>
+          <button class="btn sm" data-act="salva-modale">Salva</button>
+        </div>
+      </div>
+    </div></div>`;
+  const f=$("#modalmount input,#modalmount textarea"); if(f) f.focus();
+}
+function campoHTML(c){
+  if(c.tipo==="hr") return '<hr>';
+  if(c.tipo==="titolo") return `<div class="micro" style="margin-top:6px">${esc(c.label)}</div>`;
+  const id="mf-"+c.k;
+  if(c.tipo==="area") return `<label class="field"><span>${esc(c.label)}</span>
+    <textarea id="${id}" data-mf="${c.k}" placeholder="${esc(c.ph||"")}" rows="${c.rows||3}">${esc(c.val??"")}</textarea>
+    ${c.hint?`<span class="tiny">${esc(c.hint)}</span>`:""}</label>`;
+  if(c.tipo==="select") return `<label class="field"><span>${esc(c.label)}</span>
+    <select id="${id}" data-mf="${c.k}">${c.opz.map(o=>
+      `<option value="${esc(o[0])}" ${String(c.val)===String(o[0])?"selected":""}>${esc(o[1])}</option>`).join("")}</select></label>`;
+  if(c.tipo==="multi") return `<div class="field"><span>${esc(c.label)}</span>
+    <div class="row-tight" data-mf-multi="${c.k}">${c.opz.map(o=>
+      `<span class="chip pick ${(c.val||[]).includes(o[0])?"on":""}" data-act="mf-multi"
+        data-k="${c.k}" data-v="${esc(o[0])}">${esc(o[1])}</span>`).join("")}</div></div>`;
+  if(c.tipo==="check") return `<label class="row" style="cursor:pointer">
+    <input type="checkbox" id="${id}" data-mf="${c.k}" ${c.val?"checked":""} style="width:16px;height:16px;padding:0">
+    <span class="small">${esc(c.label)}</span></label>`;
+  return `<label class="field"><span>${esc(c.label)}</span>
+    <input id="${id}" data-mf="${c.k}" value="${esc(c.val??"")}" placeholder="${esc(c.ph||"")}"
+      ${c.tipo==="num"?'inputmode="decimal"':""}>
+    ${c.hint?`<span class="tiny">${esc(c.hint)}</span>`:""}</label>`;
+}
+function leggiModale(){
+  const out={};
+  document.querySelectorAll("#modalmount [data-mf]").forEach(el=>{
+    out[el.dataset.mf]=el.type==="checkbox"?el.checked:el.value;
+  });
+  document.querySelectorAll("#modalmount [data-mf-multi]").forEach(el=>{
+    out[el.dataset.mfMulti]=[...el.querySelectorAll(".chip.on")].map(c=>c.dataset.v);
+  });
+  return out;
+}
+const chiudiModale=()=>{ $("#modalmount").innerHTML=""; _modaleSalva=null };
+
+/* ---- modali specifiche ---- */
+function modaleBench(b){
+  modale({titolo:b?"Modifica benchmark":"Nuovo benchmark",campi:[
+    {k:"titolo",label:"Titolo",val:b?.titolo,ph:"TV 55 pollici soggiorno"},
+    {k:"tipo",label:"Tipologia prodotto",val:b?.tipo,ph:"TV, Divano, Frigorifero, Imbianchino…"},
+    {k:"categoria",label:"Natura",tipo:"select",val:b?.categoria||"prodotto",
+      opz:[["prodotto","Prodotto"],["servizio","Servizio"]]},
+    {k:"ambienti",label:"Ambienti",tipo:"multi",val:b?.ambienti||[],
+      opz:S.ambienti.map(a=>[a.id,a.nome])},
+    {k:"esigenza",label:"Esigenza",tipo:"area",val:b?.esigenza,rows:2,
+      ph:"Cosa deve fare, per chi, in che condizioni d'uso"},
+    {k:"vincoli",label:"Vincoli",tipo:"area",val:b?.vincoli,rows:2,
+      ph:"Misure, incassi, altezze, verso di apertura, budget"},
+    {k:"budget",label:"Budget massimo €",tipo:"num",val:b?.budget},
+    {k:"bonusMobili",label:"Rientra nel bonus mobili 2026",tipo:"check",val:b?.bonusMobili},
+  ],salva:async v=>{
+    const nb=b?{...b}:{id:uid(),data:oggi(),stato:"bozza",candidati:[],chat:[]};
+    Object.assign(nb,{titolo:v.titolo||"Senza titolo",tipo:v.tipo,categoria:v.categoria,
+      ambienti:v.ambienti||[],esigenza:v.esigenza,vincoli:v.vincoli,
+      budget:v.budget,bonusMobili:!!v.bonusMobili});
+    await salvaBench(nb); chiudiModale();
+    if(!b) vai("b/"+nb.id); else render();
+  }});
+}
+function modaleCand(b,c){
+  modale({titolo:c?"Scheda candidato":"Nuovo candidato",campi:[
+    {k:"marca",label:"Marca",val:c?.marca},
+    {k:"modello",label:"Modello",val:c?.modello},
+    {k:"prezzo",label:"Prezzo €",tipo:"num",val:c?.prezzo},
+    {k:"venditore",label:"Venditore",val:c?.venditore,ph:"Unieuro, Amazon, negozio di zona…"},
+    {k:"garanziaMesi",label:"Garanzia (mesi)",tipo:"num",val:c?.garanziaMesi},
+    {tipo:"titolo",label:"Punteggi da 0 a 10"},
+    ...CRITERI.map(cr=>({k:"p_"+cr.k,label:cr.label,tipo:"num",val:c?.punteggi?.[cr.k]})),
+    {tipo:"hr"},
+    {k:"specs",label:"Specifiche",tipo:"area",rows:4,
+      val:(c?.specs||[]).map(s=>s.k+": "+s.v).join("\n"),
+      ph:"Una per riga — Classe energetica: A\nRumorosità: 38 dB",hint:"formato chiave: valore"},
+    {k:"pro",label:"Pro",tipo:"area",rows:2,val:(c?.pro||[]).join("\n"),ph:"Uno per riga"},
+    {k:"contro",label:"Contro",tipo:"area",rows:2,val:(c?.contro||[]).join("\n"),ph:"Uno per riga"},
+    {k:"daVerificare",label:"Punto aperto da verificare",val:c?.daVerificare,
+      ph:"Compare in home fra le cose da decidere"},
+    {k:"kwhAnno",label:"Consumo kWh/anno (per il TCO)",tipo:"num",val:c?.tco?.kwhAnno},
+    {k:"prezzoPagato",label:"Prezzo effettivamente pagato €",tipo:"num",val:c?.prezzoPagato},
+  ],salva:async v=>{
+    const nc=c?{...c}:{id:uid(),preferito:false,acquistato:false,link:[]};
+    nc.marca=v.marca; nc.modello=v.modello; nc.prezzo=v.prezzo; nc.venditore=v.venditore;
+    nc.garanziaMesi=v.garanziaMesi; nc.daVerificare=v.daVerificare; nc.prezzoPagato=v.prezzoPagato;
+    nc.punteggi={}; for(const cr of CRITERI){ const x=v["p_"+cr.k]; if(x!=="") nc.punteggi[cr.k]=num(x) }
+    nc.specs=(v.specs||"").split("\n").map(r=>r.trim()).filter(Boolean).map(r=>{
+      const i=r.indexOf(":"); return i<0?{k:r,v:""}:{k:r.slice(0,i).trim(),v:r.slice(i+1).trim()}});
+    nc.pro=(v.pro||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    nc.contro=(v.contro||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    nc.tco={...(nc.tco||{}),kwhAnno:v.kwhAnno,costoKwh:0.25,anniVita:10};
+    b.candidati=b.candidati||[];
+    const i=b.candidati.findIndex(x=>x.id===nc.id);
+    if(i<0) b.candidati.push(nc); else b.candidati[i]=nc;
+    if(b.stato==="bozza") b.stato="corso";
+    await salvaBench(b); chiudiModale(); render();
+  }});
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   GENERAZIONE CANDIDATI (senza rete: conoscenza del modello, dichiarata)
+   ════════════════════════════════════════════════════════════════════════ */
+async function generaCandidati(b){
+  if(!AI.pronto) return toast("Modello non disponibile");
+  S.ui.busy=true; toast("Sto costruendo le schede… può richiedere un minuto",6000);
+  const miei=(b.modelliUtente||"").trim();
+  const p=`Sei un consulente d'acquisto. Devi produrre schede comparative per l'arredo di
+un appartamento a Roma. NON hai accesso a internet: usa solo ciò che sai, e dichiara
+esplicitamente quando un dato non è verificabile.
+
+RICHIESTA: ${b.titolo}
+TIPOLOGIA: ${b.tipo||"non specificata"}
+AMBIENTI: ${nomiAmbienti(b.ambienti)||"non specificati"}
+ESIGENZA: ${b.esigenza||"non specificata"}
+VINCOLI: ${b.vincoli||"nessuno dichiarato"}
+BUDGET MASSIMO: ${b.budget?b.budget+" €":"non specificato"}
+${miei?"MODELLI IMPOSTI DALL'UTENTE (usa esattamente questi):\n"+miei:"Scegli tu i 5 modelli più adatti, disponibili sul mercato italiano."}
+
+REGOLE VINCOLANTI:
+- Rispondi SOLO con un array JSON. Nessun testo prima o dopo.
+- Non usare mai il carattere doppio apice dentro i valori: per i pollici scrivi 55 pollici.
+- Ogni campo di testo massimo 110 caratteri.
+- I prezzi sono STIME di listino indicativo: mettili in "prezzo" e segnala in "daVerificare"
+  che vanno confermati con una ricerca reale.
+- Punteggi interi da 0 a 10. Se un criterio non è valutabile, ometti la chiave.
+- Massimo 5 specs, 2 pro, 2 contro, 3 fonti. Le fonti sono tipologie consultate a memoria
+  (es. test Altroconsumo, discussioni Reddit), non URL inventati.
+- Ordina dal migliore al peggiore per adeguatezza alla richiesta.
+
+Formato di ogni elemento:
+{"marca":"","modello":"","prezzo":0,"venditore":"","garanziaMesi":0,
+ "specs":[{"k":"","v":""}],
+ "punteggi":{"tecnica":0,"prezzoValore":0,"costruzione":0,"brand":0,"assistenza":0,"durata":0,"recensioni":0},
+ "tco":{"kwhAnno":0},"pro":[""],"contro":[""],"fonti":[""],
+ "daVerificare":"","rispettaVincoli":true}
+
+Restituisci esattamente 5 elementi${miei?" o uno per ogni modello imposto":""}.`;
+  try{
+    const arr=await AI.json(p,{tier:S.cfg.tier==="quick"?"default":S.cfg.tier});
+    const lista=Array.isArray(arr)?arr:(arr.candidati||arr.prodotti||[]);
+    if(!lista.length) throw {code:"vuoto",message:"Nessun candidato restituito"};
+    b.candidati=lista.slice(0,8).map(c=>({
+      id:uid(),marca:c.marca||"",modello:c.modello||"",nome:c.nome||"",
+      prezzo:c.prezzo??"",venditore:c.venditore||"",garanziaMesi:c.garanziaMesi||"",
+      specs:Array.isArray(c.specs)?c.specs.filter(s=>s&&s.k):[],
+      punteggi:c.punteggi||{},tco:{...(c.tco||{}),costoKwh:0.25,anniVita:10},
+      pro:c.pro||[],contro:c.contro||[],fonti:c.fonti||[],
+      daVerificare:c.daVerificare||"",preferito:false,acquistato:false,link:[],
+    }));
+    b.stato="corso"; b.data=b.data||oggi();
+    await salvaBench(b);
+    toast("5 schede pronte. Ora mettile in coda per la verifica dei prezzi reali.");
+  }catch(e){ toast(AI.copy(e),5000) }
+  S.ui.busy=false; render();
+}
+</script>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════════════
+   DOCUMENTI — lettura, indicizzazione, controllo aggiornamenti
+   Il testo si estrae UNA volta. La scheda si calcola UNA volta.
+   La chat legge la scheda, non il file: le richieste ripetute costano zero.
+   ════════════════════════════════════════════════════════════════════════ */
+let _pdfjs=null;
+async function pdfLib(){
+  if(_pdfjs!==null) return _pdfjs;
+  try{
+    await new Promise((ok,ko)=>{
+      const s=document.createElement("script");
+      s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      s.onload=ok; s.onerror=ko; document.head.appendChild(s);
+      setTimeout(ko,12000);
+    });
+    if(window.pdfjsLib){
+      try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc=
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js" }catch{}
+      _pdfjs=window.pdfjsLib;
+    }else _pdfjs=false;
+  }catch{ _pdfjs=false }
+  return _pdfjs;
+}
+async function estraiTesto(file,buf){
+  const n=file.name.toLowerCase();
+  if(/\.(txt|md|csv|json|log)$/.test(n)) return new TextDecoder().decode(buf).slice(0,120000);
+  if(/\.pdf$/.test(n)||file.type==="application/pdf"){
+    const lib=await pdfLib(); if(!lib) return null;
+    try{
+      const doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+      let t="";
+      for(let i=1;i<=Math.min(doc.numPages,40);i++){
+        const pg=await doc.getPage(i);
+        const c=await pg.getTextContent();
+        t+=c.items.map(x=>x.str).join(" ")+"\n";
+        if(t.length>120000) break;
+      }
+      return t.trim()||null;
+    }catch(e){ console.warn("pdf:",e); return null }
+  }
+  return null;
+}
+async function schedaDa(testo,nomeFile){
+  if(!AI.pronto||!testo) return null;
+  const p=`Estrai i dati da questo documento di un progetto di ristrutturazione casa.
+Rispondi SOLO con un oggetto JSON, nessun testo attorno. Non inventare: se un dato
+non c'è, usa stringa vuota o 0.
+
+{"tipo":"","fornitore":"","oggetto":"","imponibile":0,"iva":0,"totale":0,
+ "data":"AAAA-MM-GG","scadenza":"","riferimenti":"","riassunto":"","chiavi":[""]}
+
+tipo: uno fra preventivo, fattura, planimetria, atto, contratto, scheda tecnica, altro.
+oggetto: cosa riguarda, massimo 90 caratteri.
+riassunto: 3 righe, massimo 300 caratteri, i numeri che contano.
+chiavi: massimo 8 parole chiave per la ricerca.
+
+NOME FILE: ${nomeFile}
+CONTENUTO (troncato):
+${testo.slice(0,22000)}`;
+  try{ return await AI.json(p,{tier:"quick"}) }catch(e){ console.warn("scheda:",e?.code); return null }
+}
+function normalizza(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim() }
+
+async function gestisciFile(files){
+  if(!files||!files.length) return;
+  const cart=S.ui.cartella==="tutte"?(S.cartelle[0]?.id||"altro"):S.ui.cartella;
+  let nuovi=0,dupli=0,superati=0;
+  for(const file of files){
+    if(file.size>25*1024*1024){ toast(`"${file.name}" supera 25 MB: caricalo su Drive e incolla il link`,5000); continue }
+    toast(`Leggo ${file.name}…`,4000);
+    const buf=await file.arrayBuffer();
+    const hash=await sha256(buf);
+    if(S.documenti.some(d=>d.hash===hash)){ dupli++; continue }
+
+    const testo=await estraiTesto(file,buf);
+    const scheda=await schedaDa(testo,file.name);
+    const d={
+      id:uid(),nome:file.name,cartella:cart,mime:file.type||"",dim:file.size,
+      hash,caricato:new Date().toISOString(),
+      stato:testo?(scheda?"indicizzato":"testo-estratto"):"da-indicizzare",
+      scheda:scheda||null, superato:false, driveUrl:"",
+      testo:testo?testo.slice(0,60000):"",
+    };
+    /* controllo aggiornamenti: stesso fornitore + stesso oggetto → il più vecchio decade */
+    if(scheda?.fornitore&&scheda?.oggetto){
+      for(const old of S.documenti){
+        if(old.superato||!old.scheda) continue;
+        if(normalizza(old.scheda.fornitore)!==normalizza(scheda.fornitore)) continue;
+        if(normalizza(old.scheda.oggetto)!==normalizza(scheda.oggetto)) continue;
+        const dOld=old.scheda.data||old.caricato, dNew=scheda.data||d.caricato;
+        if(String(dNew)>=String(dOld)){ old.superato=true; await salvaDoc(old); superati++ }
+        else d.superato=true;
+      }
+    }
+    await salvaDoc(d); nuovi++;
+    if(!testo) await nuovoJob("indicizza-documento",{ref:d.id,titolo:file.name,
+      nota:"Estrazione testo non riuscita nel browser: da elaborare in Claude Code."});
+  }
+  render();
+  toast(`${nuovi} caricati${dupli?`, ${dupli} duplicati scartati`:""}${superati?`, ${superati} superati`:""}`,4500);
+}
+
+function apriDoc(id){
+  const d=byId(S.documenti,id); if(!d) return;
+  const s=d.scheda||{};
+  modale({titolo:d.nome,campi:[
+    {k:"cartella",label:"Cartella",tipo:"select",val:d.cartella,opz:S.cartelle.map(c=>[c.id,c.nome])},
+    {k:"driveUrl",label:"Link al file (Drive, Dropbox, ecc.)",val:d.driveUrl,
+      ph:"https://drive.google.com/…",hint:"Il file originale resta tuo: qui teniamo la scheda e il link."},
+    {tipo:"titolo",label:"Scheda estratta"},
+    {k:"tipo",label:"Tipo",val:s.tipo},
+    {k:"fornitore",label:"Fornitore",val:s.fornitore},
+    {k:"oggetto",label:"Oggetto",val:s.oggetto},
+    {k:"imponibile",label:"Imponibile €",tipo:"num",val:s.imponibile},
+    {k:"iva",label:"IVA €",tipo:"num",val:s.iva},
+    {k:"totale",label:"Totale €",tipo:"num",val:s.totale},
+    {k:"data",label:"Data documento",val:s.data,ph:"2026-09-06"},
+    {k:"riassunto",label:"Riassunto",tipo:"area",rows:3,val:s.riassunto},
+    {k:"superato",label:"Superato da una versione più recente",tipo:"check",val:d.superato},
+  ],nota:d.testo?`Testo indicizzato: ${d.testo.length.toLocaleString("it-IT")} caratteri.
+    La chat legge la scheda qui sopra, non il file.`:
+    "Testo non estratto nel browser. È in coda: lo elaboro io in Claude Code.",
+  salva:async v=>{
+    d.cartella=v.cartella; d.driveUrl=v.driveUrl; d.superato=!!v.superato;
+    d.scheda={...(d.scheda||{}),tipo:v.tipo,fornitore:v.fornitore,oggetto:v.oggetto,
+      imponibile:v.imponibile,iva:v.iva,totale:v.totale,data:v.data,riassunto:v.riassunto};
+    await salvaDoc(d); chiudiModale(); render();
+  }});
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   AZIONI — un solo gestore delegato
+   ════════════════════════════════════════════════════════════════════════ */
+const A={
+  go:(el)=>vai(el.dataset.route),
+  "toggle-theme":async()=>{const o=["auto","light","dark"];
+    await salvaCfg({tema:o[(o.indexOf(S.cfg.tema)+1)%3]}); applicaTema(); render()},
+  tema:async el=>{await salvaCfg({tema:el.dataset.v}); applicaTema(); render()},
+  tier:async el=>{await salvaCfg({tier:el.dataset.v}); render()},
+  "tier-sel":async el=>{await salvaCfg({tier:el.value}); renderChat()},
+  modo:el=>{S.ui.modo=el.dataset.v; leggiBozza(); render()},
+  "rm-amb-bozza":el=>{S.ui.ambScelti=(S.ui.ambScelti||[]).filter(x=>x!==el.dataset.id); leggiBozza(); render()},
+
+  "nuovo-benchmark":async()=>{
+    leggiBozza();
+    const t=(S.ui.bozzaQ||"").trim();
+    if(!t) return toast("Scrivi cosa devi comprare");
+    const b={id:uid(),titolo:t,tipo:S.ui.bozzaTipo||"",categoria:"prodotto",
+      ambienti:S.ui.ambScelti||[],esigenza:t,vincoli:"",budget:S.ui.bozzaBudget||"",
+      data:oggi(),stato:"bozza",candidati:[],chat:[],bonusMobili:false,
+      modelliUtente:S.ui.modo==="miei"?(S.ui.bozzaModelli||""):""};
+    await salvaBench(b);
+    S.ui.bozzaQ=""; S.ui.bozzaModelli=""; S.ui.bozzaTipo=""; S.ui.bozzaBudget=""; S.ui.ambScelti=[];
+    vai("b/"+b.id);
+    if(AI.pronto) setTimeout(()=>generaCandidati(byId(S.benchmarks,b.id)),300);
+    else await A["job-verifica"]({dataset:{b:b.id}});
+  },
+  genera:el=>generaCandidati(byId(S.benchmarks,el.dataset.b)),
+  "job-verifica":async el=>{
+    const b=byId(S.benchmarks,el.dataset.b); if(!b) return;
+    b.stato="attesa"; await salvaBench(b);
+    await nuovoJob("benchmark-ricerca-reale",{ref:b.id,titolo:b.titolo,
+      richiesta:{titolo:b.titolo,tipo:b.tipo,ambienti:nomiAmbienti(b.ambienti),
+        esigenza:b.esigenza,vincoli:b.vincoli,budget:b.budget,
+        modelliUtente:b.modelliUtente||"",
+        candidatiAttuali:(b.candidati||[]).map(c=>`${c.marca} ${c.modello}`)}});
+    render(); toast("In coda. Alla prossima sessione lo eseguo con la ricerca web vera.",4500);
+  },
+  "edit-bench":el=>modaleBench(byId(S.benchmarks,el.dataset.id)),
+  "add-cand":el=>modaleCand(byId(S.benchmarks,el.dataset.b),null),
+  "edit-cand":el=>{const b=byId(S.benchmarks,el.dataset.b);
+    modaleCand(b,(b.candidati||[]).find(c=>c.id===el.dataset.c))},
+  fav:async el=>{const b=byId(S.benchmarks,el.dataset.b);
+    const c=b.candidati.find(x=>x.id===el.dataset.c); c.preferito=!c.preferito;
+    await salvaBench(b); render()},
+  acq:async el=>{const b=byId(S.benchmarks,el.dataset.b);
+    const c=b.candidati.find(x=>x.id===el.dataset.c); c.acquistato=!c.acquistato;
+    if(c.acquistato){ c.preferito=true; b.stato="fatto"; c.dataAcquisto=oggi() }
+    await salvaBench(b); render()},
+  "add-link":async el=>{
+    const b=byId(S.benchmarks,el.dataset.b); const c=b.candidati.find(x=>x.id===el.dataset.c);
+    const u=prompt("Incolla l'indirizzo della pagina del prodotto:");
+    if(!u) return;
+    c.link=[...(c.link||[]),u.trim()];
+    await salvaBench(b);
+    await nuovoJob("leggi-link",{ref:b.id,titolo:b.titolo,url:u.trim(),
+      nota:"La pagina non è leggibile dal browser dell'app: da leggere in Claude Code."});
+    render(); toast("Link salvato e messo in coda perché io lo legga");
+  },
+  "rm-link":async el=>{const b=byId(S.benchmarks,el.dataset.b);
+    const c=b.candidati.find(x=>x.id===el.dataset.c);
+    c.link.splice(+el.dataset.i,1); await salvaBench(b); render()},
+  "rm-amb":async el=>{const b=byId(S.benchmarks,el.dataset.b);
+    b.ambienti=(b.ambienti||[]).filter(x=>x!==el.dataset.id); await salvaBench(b); render()},
+  "add-amb":el=>{const b=byId(S.benchmarks,el.dataset.b);
+    modale({titolo:"Ambienti del benchmark",campi:[
+      {k:"ambienti",label:"Seleziona uno o più ambienti",tipo:"multi",val:b.ambienti||[],
+        opz:S.ambienti.map(a=>[a.id,a.nome])}],
+      salva:async v=>{b.ambienti=v.ambienti||[]; await salvaBench(b); chiudiModale(); render()}})},
+
+  "add-ambiente":()=>modale({titolo:"Nuovo ambiente",campi:[
+    {k:"nome",label:"Nome",ph:"Bagno grande"},{k:"note",label:"Note",ph:"12 mq · h 2,60"},
+    {k:"budget",label:"Budget €",tipo:"num"}],
+    salva:async v=>{const id=uid(); const a={nome:v.nome||"Ambiente",note:v.note,budget:v.budget};
+      await Store.set("ambienti/"+id,a); S.ambienti.push({id,...a}); chiudiModale(); render()}}),
+  "edit-ambiente":el=>{const a=byId(S.ambienti,el.dataset.id);
+    modale({titolo:"Modifica ambiente",campi:[
+      {k:"nome",label:"Nome",val:a.nome},{k:"note",label:"Note",val:a.note},
+      {k:"budget",label:"Budget €",tipo:"num",val:a.budget}],
+      salva:async v=>{Object.assign(a,{nome:v.nome,note:v.note,budget:v.budget});
+        await Store.set("ambienti/"+a.id,{nome:a.nome,note:a.note,budget:a.budget});
+        chiudiModale(); render()}})},
+  "del-ambiente":async el=>{
+    const a=byId(S.ambienti,el.dataset.id);
+    const usi=S.benchmarks.filter(b=>(b.ambienti||[]).includes(a.id)).length;
+    if(!confirm(`Eliminare "${a.nome}"?`+(usi?`\n${usi} benchmark perderanno questo tag.`:""))) return;
+    for(const b of S.benchmarks) if((b.ambienti||[]).includes(a.id)){
+      b.ambienti=b.ambienti.filter(x=>x!==a.id); await salvaBench(b) }
+    await Store.del("ambienti/"+a.id);
+    S.ambienti=S.ambienti.filter(x=>x.id!==a.id); render()},
+
+  cartella:el=>{S.ui.cartella=el.dataset.id; render()},
+  "add-cartella":()=>modale({titolo:"Nuova cartella",campi:[{k:"nome",label:"Nome",ph:"Garanzie"}],
+    salva:async v=>{const id=uid(); await Store.set("cartelle/"+id,{nome:v.nome||"Cartella"});
+      S.cartelle.push({id,nome:v.nome||"Cartella"}); chiudiModale(); render()}}),
+  upload:()=>$("#fileinput")?.click(),
+  "apri-doc":el=>apriDoc(el.dataset.id),
+  "sposta-doc":async el=>{const d=byId(S.documenti,el.dataset.id);
+    d.cartella=el.value; await salvaDoc(d); render(); toast("Spostato in "+carNome(el.value))},
+  "del-job":async el=>{await Store.del("coda/"+el.dataset.id);
+    S.coda=S.coda.filter(j=>j.id!==el.dataset.id); render()},
+
+  ordina:el=>{const k=el.dataset.k;
+    S.ui.ordina=S.ui.ordina.k===k?{k,d:-S.ui.ordina.d}:{k,d:k==="data"?-1:1}; render()},
+  "filtro-fav":()=>{S.ui.filtro.fav=!S.ui.filtro.fav; render()},
+  "filtro-acq":()=>{S.ui.filtro.acq=!S.ui.filtro.acq; render()},
+  peso:async el=>{await salvaCfg({pesi:{...S.cfg.pesi,[el.dataset.k]:+el.value}}); render()},
+
+  "apri-chat":()=>{S.ui.chatAperta=true; renderChat();
+    setTimeout(()=>document.querySelector('[data-scope="globale"]')?.focus(),60)},
+  "chiudi-chat":()=>{S.ui.chatAperta=false; renderChat()},
+  "chat-send":el=>Chat.invia(el.dataset.scope),
+  "stop-chat":el=>{Chat.ctl[el.dataset.scope]?.abort()},
+
+  "mf-multi":el=>{el.classList.toggle("on")},
+  "chiudi-modale":chiudiModale,
+  "salva-modale":async()=>{ const f=_modaleSalva; if(f) await f(leggiModale()) },
+
+  export:()=>{
+    const dump={v:3,esportato:new Date().toISOString(),cfg:S.cfg,ambienti:S.ambienti,
+      cartelle:S.cartelle,benchmarks:S.benchmarks,documenti:S.documenti,coda:S.coda,
+      chatGlobale:S.chatGlobale};
+    const t=JSON.stringify(dump,null,1);
+    navigator.clipboard?.writeText(t).then(
+      ()=>toast("Backup copiato negli appunti: incollalo in un file su Drive",5000),
+      ()=>modale({titolo:"Backup",campi:[{k:"x",label:"Copia questo testo",tipo:"area",rows:14,val:t}],
+        salva:async()=>chiudiModale()}));
+  },
+  import:()=>modale({titolo:"Importa backup",campi:[
+    {k:"j",label:"Incolla il JSON esportato",tipo:"area",rows:12}],
+    nota:"Unisce i dati: gli elementi con lo stesso identificativo vengono sovrascritti.",
+    salva:async v=>{
+      let d; try{ d=JSON.parse(v.j) }catch{ return toast("JSON non valido") }
+      for(const a of d.ambienti||[]){ await Store.set("ambienti/"+a.id,scrivibile(a)) }
+      for(const c of d.cartelle||[]){ await Store.set("cartelle/"+c.id,scrivibile(c)) }
+      for(const b of d.benchmarks||[]){ await Store.set("benchmark/"+b.id,scrivibile(b)) }
+      for(const x of d.documenti||[]){ await Store.set("documenti/"+x.id,scrivibile(x)) }
+      if(d.cfg) await salvaCfg(d.cfg);
+      chiudiModale(); await carica(); render(); toast("Backup importato");
+    }}),
+};
+
+function leggiBozza(){
+  const g=id=>document.getElementById(id)?.value;
+  S.ui.bozzaQ=g("q-nuovo")??S.ui.bozzaQ;
+  S.ui.bozzaModelli=g("q-modelli")??S.ui.bozzaModelli;
+  S.ui.bozzaTipo=g("q-tipo")??S.ui.bozzaTipo;
+  S.ui.bozzaBudget=g("q-budget")??S.ui.bozzaBudget;
+}
+
+/* ─────────── eventi globali ─────────── */
+document.addEventListener("click",e=>{
+  const scrim=e.target.closest(".scrim");
+  if(scrim&&e.target===scrim){ chiudiModale(); return }
+  const el=e.target.closest("[data-act]");
+  if(!el) return;
+  const act=el.dataset.act;
+  if(el.tagName==="A"&&el.getAttribute("href")?.startsWith("http")) return;
+  if(["chat-input","filtro-q","filtro-amb","filtro-doc","sposta-doc","tier-sel","peso","upload"].includes(act)
+     &&["INPUT","SELECT","TEXTAREA"].includes(el.tagName)) return;
+  const f=A[act];
+  if(f){ e.preventDefault(); f(el,e) }
+});
+document.addEventListener("change",e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const f=A[el.dataset.act]; if(f&&["SELECT","INPUT"].includes(el.tagName)) f(el,e);
+});
+document.addEventListener("input",e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const act=el.dataset.act;
+  if(act==="chat-input"){ Chat.bozze[el.dataset.scope]=el.value;
+    el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,130)+"px"; return }
+  if(act==="filtro-q"){ S.ui.filtro.q=el.value; clearTimeout(window._fq);
+    window._fq=setTimeout(()=>{const p=el.selectionStart; render();
+      const n=document.getElementById("f-q"); if(n){n.focus(); n.setSelectionRange(p,p)}},260); return }
+  if(act==="filtro-doc"){ S.ui.filtroDoc=el.value; clearTimeout(window._fd);
+    window._fd=setTimeout(()=>{const p=el.selectionStart; render();
+      const n=document.querySelector('[data-act="filtro-doc"]'); if(n){n.focus(); n.setSelectionRange(p,p)}},260); return }
+  if(act==="filtro-amb"){ S.ui.filtro.amb=el.value; render(); return }
+  if(act==="peso"){ A.peso(el); return }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ if($("#modalmount").innerHTML) chiudiModale();
+    else if(S.ui.chatAperta){ S.ui.chatAperta=false; renderChat() } }
+  const t=e.target;
+  if(t?.dataset?.act==="chat-input"&&e.key==="Enter"&&!e.shiftKey){
+    e.preventDefault(); Chat.invia(t.dataset.scope) }
+  if(t?.id==="q-nuovo"&&e.key==="Enter"){ e.preventDefault(); A["nuovo-benchmark"]() }
+});
+document.addEventListener("dragover",e=>{
+  const d=e.target.closest("#dropzone"); if(!d) return;
+  e.preventDefault(); d.classList.add("hot");
+});
+document.addEventListener("dragleave",e=>{ e.target.closest("#dropzone")?.classList.remove("hot") });
+document.addEventListener("drop",e=>{
+  const d=e.target.closest("#dropzone"); if(!d) return;
+  e.preventDefault(); d.classList.remove("hot");
+  gestisciFile([...(e.dataTransfer?.files||[])]);
+});
+document.addEventListener("change",e=>{
+  if(e.target?.id==="fileinput"){ gestisciFile([...e.target.files]); e.target.value="" }
+});
+
+/* ─────────── avvio ─────────── */
+(async function(){
+  $("#view").innerHTML=`<div class="wrap"><div class="empty" style="padding-top:120px">
+    <div class="display" style="font-size:34px">Casa</div>
+    <div class="tiny" style="margin-top:14px"><span class="spin"></span> apro l'archivio…</div></div></div>`;
+  S.ui.route=leggiHash();
+  try{ await carica() }catch(e){ console.error(e) }
+  render();
+  if(Store.backend==="local")
+    setTimeout(()=>toast("Archivio locale: i dati restano in questo browser. Esporta il backup.",6000),1200);
+})();
+</script>
