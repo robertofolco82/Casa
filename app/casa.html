@@ -367,6 +367,15 @@ const oggi = ()=>new Date().toISOString().slice(0,10);
 const esc = s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const eur = n=>(n===0||n)&&!isNaN(n)?"€ "+Number(n).toLocaleString("it-IT",{maximumFractionDigits:0}):"—";
 const dataIt = d=>d?new Date(d).toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"2-digit"}):"—";
+/* con più benchmark nello stesso giorno, la data da sola non ordina niente */
+const dataOraIt = d=>{
+  if(!d) return "—";
+  const x=new Date(d); if(isNaN(x)) return "—";
+  const g=x.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit",year:"2-digit"});
+  const mezzanotte=x.getUTCHours()===0&&x.getUTCMinutes()===0&&x.getUTCSeconds()===0;
+  return mezzanotte?g:g+" <span style=\"opacity:.55\">"+
+    x.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</span>";
+};
 const num = v=>{const n=parseFloat(String(v??"").replace(/[^\d.,-]/g,"").replace(",","."));return isNaN(n)?null:n};
 const clone = o=>JSON.parse(JSON.stringify(o));
 const byId = (a,id)=>a.find(x=>x.id===id);
@@ -761,20 +770,104 @@ function speseTotali(){
   return {tot,bonus};
 }
 
-/* ─────────── ricerche esterne ─────────── */
-function qDove(c){
-  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
-  return "https://www.google.com/search?tbm=shop&hl=it&gl=it&q="+encodeURIComponent(t+" prezzo");
+/* ════════════════════════════════════════════════════════════════════════
+   RICERCHE ESTERNE
+
+   Le fonti buone per una lavastoviglie non lo sono per un divano. HDblog
+   e AVMagazine non hanno mai recensito un imbottito, Altroconsumo non
+   testa i falegnami. Ogni famiglia merceologica ha i suoi luoghi dove si
+   dice la verità, e cercare nei posti sbagliati produce zero risultati —
+   che è peggio di nessun link, perché sembra una risposta.
+   ════════════════════════════════════════════════════════════════════════ */
+const FAMIGLIE=[
+  {k:"elettronica", re:/\btv\b|televis|monitor|proiett|soundbar|hi-?fi|impianto audio|console/i,
+   rec:["reddit.com","hdblog.it","tomshw.it","avmagazine.it","dday.it","hwupgrade.it"],
+   neg:["amazon.it","mediaworld.it","unieuro.it","euronics.it","trovaprezzi.it"]},
+
+  {k:"elettrodomestico", re:/frigo|congelat|forno|piano cottura|lavastov|lavatric|asciugatric|lavasciug|cappa|microonde|cantinet|scaldacqua|boiler/i,
+   rec:["altroconsumo.it","reddit.com","dday.it","hwupgrade.it"],
+   neg:["mediaworld.it","unieuro.it","euronics.it","expert.it","trovaprezzi.it"]},
+
+  {k:"clima", re:/climatizz|condizion|pompa di calore|caldaia|vmc|split|canalizzat/i,
+   rec:["energeticambiente.it","altroconsumo.it","reddit.com"],
+   neg:[], extraNeg:"rivenditore OR installatore autorizzato"},
+
+  {k:"arredo", re:/divano|poltrona|imbottit|letto|materass|rete |armadio|cabina armadio|libreri|tavolo|sedia|comodino|cassettiera|scrittoio|scrivania|boiserie|cucina componibile|mobile|credenz|consol|pouf|parquet|zoccolino|tappet/i,
+   rec:["arredamento.it","houzz.it","reddit.com","opinioni.it","trustpilot.it"],
+   neg:[], extraNeg:"rivenditore OR showroom OR \"punto vendita\""},
+
+  {k:"bagno", re:/sanitari|piatto doccia|box doccia|lavabo|rubinett|miscelat|termoarredo|cassetta|wc\b|bidet|vasca/i,
+   rec:["arredamento.it","houzz.it","reddit.com"],
+   neg:[], extraNeg:"rivenditore idrosanitari OR showroom"},
+
+  {k:"illuminazione", re:/lampad|faretti|illumin|plafon|applique|sospension|strisc led|led\b/i,
+   rec:["arredamento.it","houzz.it","reddit.com"],
+   neg:[], extraNeg:"rivenditore OR showroom"},
+
+  {k:"serramenti", re:/porta|porte|finestr|serrament|ante|scorrevol|filomuro|controtelai|avvolgibil|tapparell/i,
+   rec:["arredamento.it","reddit.com","houzz.it"],
+   neg:[], extraNeg:"rivenditore OR showroom OR posatore"},
+
+  {k:"domotica", re:/allarme|antifurt|domotic|smart home|videocitofon|telecamer|gateway|termostat/i,
+   rec:["reddit.com","hwupgrade.it","tomshw.it","dday.it"],
+   neg:["amazon.it","trovaprezzi.it"]},
+
+  {k:"servizio", re:/imbianch|falegn|idraulic|elettricist|impresa|muratore|trasloc|architett|geometr|posator|fabbro|tappezzier|ristruttur/i,
+   rec:["houzz.it","trustpilot.it","reddit.com"], servizio:true},
+];
+const FAM_DEF={k:"generico", rec:["reddit.com","altroconsumo.it","trustpilot.it"],
+  neg:[], extraNeg:"rivenditore OR negozio"};
+
+function famiglia(b,c){
+  const t=[b?.tipo, b?.titolo, c?.modello, c?.nome].filter(Boolean).join(" ");
+  if(b?.categoria==="servizio") return FAMIGLIE.find(f=>f.k==="servizio");
+  return FAMIGLIE.find(f=>f.re && f.re.test(t)) || FAM_DEF;
 }
-function qNegozi(c){
-  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
-  return "https://www.google.com/search?hl=it&gl=it&q="+encodeURIComponent(
-    '"'+t+'" prezzo disponibilità (site:amazon.it OR site:mediaworld.it OR site:unieuro.it OR site:euronics.it OR site:eprice.it OR site:trovaprezzi.it) recensioni negozio affidabile');
+
+/* Il nome commerciale, non la descrizione. "Marvin con penisola, tessuto
+   sfoderabile" cercato per intero non esiste da nessuna parte: la sigla è
+   "Marvin". Taglia alla prima virgola, parentesi o separatore. */
+function sigla(c){
+  const grezzo=String(c.modello||c.nome||"").trim();
+  const pulito=grezzo
+    .split(/[,(\[·–—]|\s+-\s+/)[0]
+    .split(/\s+(?:con|senza|in|da|per|a)\s+/i)[0]
+    .trim();
+  return [c.marca, pulito||grezzo].filter(Boolean).join(" ").trim();
 }
-function qRecensioni(c){
-  const t=[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"";
-  return "https://www.google.com/search?hl=it&gl=it&q="+encodeURIComponent(
-    '"'+t+'" (recensione OR problemi OR difetti) (site:reddit.com OR site:hdblog.it OR site:tomshw.it OR site:hwupgrade.it OR site:altroconsumo.it OR site:avmagazine.it)');
+const siti=a=>a?.length?"("+a.map(d=>"site:"+d).join(" OR ")+")":"";
+/* "Imbianchino Imbianchino recensioni" non aiuta nessuno */
+const senzaEco=(base,tipo)=>{
+  if(!tipo) return "";
+  return base.toLowerCase().includes(String(tipo).toLowerCase())?"":tipo;
+};
+const google=q=>"https://www.google.com/search?hl=it&gl=it&q="+encodeURIComponent(q);
+
+/* confronto prezzi: Google Shopping, che non ha bisogno di filtri per sito */
+function qDove(c,b){
+  const f=famiglia(b,c);
+  const n=sigla(c);
+  if(f.servizio) return google([n,senzaEco(n,b?.tipo),"preventivo Roma"].filter(Boolean).join(" "));
+  return "https://www.google.com/search?tbm=shop&hl=it&gl=it&q="+
+    encodeURIComponent([n,senzaEco(n,b?.tipo)].filter(Boolean).join(" "));
+}
+/* dove acquistare: negozi della famiglia giusta, o rivenditori se la
+   famiglia non ha una grande distribuzione */
+function qNegozi(c,b){
+  const f=famiglia(b,c);
+  if(f.servizio) return "https://www.google.com/maps/search/"+
+    encodeURIComponent([b?.tipo||"artigiano","Roma Mezzocammino"].join(" "));
+  const n=sigla(c);
+  return google([n, senzaEco(n,b?.tipo), "prezzo disponibilità",
+    f.neg?.length?siti(f.neg):(f.extraNeg||"")].filter(Boolean).join(" "));
+}
+/* recensioni: solo le testate e i forum che quella categoria la trattano */
+function qRecensioni(c,b){
+  const f=famiglia(b,c);
+  const termini=f.servizio?"recensioni OR esperienze OR opinioni"
+                          :"recensione OR opinioni OR problemi OR difetti";
+  const n=sigla(c);
+  return google([n, senzaEco(n,b?.tipo), termini, siti(f.rec)].filter(Boolean).join(" "));
 }
 function apri(url){
   const w=window.open(url,"_blank","noopener");
@@ -994,7 +1087,8 @@ function righeBenchmark(){
         marca:[c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"—",
         anno:c.anno?Number(c.anno):null, classe:c.classeEnergetica||"",
         costo:num(c.prezzo), rank:rank>=0?rank+1:null, tot:cands.length,
-        data:b.data||"", ambiente:nomiAmbienti(b.ambienti), amb:b.ambienti||[],
+        data:b.aggiornato||b._agg||(b.data?b.data+"T00:00:00.000Z":""),
+        ambiente:nomiAmbienti(b.ambienti), amb:b.ambienti||[],
         dove:c.venditore||"", fornitura:b.fornitura||"", preferito:!!c.preferito, acquistato:!!c.acquistato,
         stato:b.stato||"bozza",
       });
@@ -1046,7 +1140,7 @@ function vElenco(){
       </tr></thead>
       <tbody>${righe.map(r=>`
         <tr class="clickable" data-act="go" data-route="b/${r.bid}">
-          <td class="num tiny">${dataIt(r.data)}</td>
+          <td class="num tiny" style="white-space:nowrap">${dataOraIt(r.data)}</td>
           <td><div>${esc(r.titolo)}</div><div class="tiny">${esc(r.tipo)}${
             r.fornitura==="impresa"?" · fornitura impresa":r.fornitura==="da chiarire"?" · fornitura da chiarire":""}</div></td>
           <td>${esc(r.marca)}</td>
@@ -1196,9 +1290,12 @@ function vDettaglio(r){
           </div></td>`).join("")}</tr>
         <tr><td>Cerca online</td>${cands.map(c=>`<td>
           <div class="stack" style="--gap:6px">
-            <a class="link q" href="${qNegozi(c)}" target="_blank" rel="noopener">Cerca dove acquistare</a><br>
-            <a class="link q" href="${qDove(c)}" target="_blank" rel="noopener">Confronta prezzi</a><br>
-            <a class="link q" href="${qRecensioni(c)}" target="_blank" rel="noopener">Cerca info e recensioni</a>
+            <a class="link q" href="${qNegozi(c,b)}" target="_blank" rel="noopener">${
+              b.categoria==="servizio"?"Trova professionisti in zona":"Cerca dove acquistare"}</a><br>
+            <a class="link q" href="${qDove(c,b)}" target="_blank" rel="noopener">${
+              b.categoria==="servizio"?"Cerca preventivi":"Confronta prezzi"}</a><br>
+            <a class="link q" href="${qRecensioni(c,b)}" target="_blank" rel="noopener">${
+              b.categoria==="servizio"?"Cerca esperienze e recensioni":"Cerca info e recensioni"}</a>
           </div></td>`).join("")}</tr>
         <tr><td>Tuoi link</td>${cands.map(c=>`<td>
           ${(c.link||[]).map((l,i)=>`<div class="tiny" style="margin-bottom:4px">
@@ -1572,7 +1669,8 @@ const Chat={
       const b=byId(S.benchmarks,scope.slice(6));
       if(!b) return;
       b.chat=tagliati;
-      await Store.set("benchmark/"+b.id,scrivibile(b));
+      b.aggiornato=new Date().toISOString();
+  await Store.set("benchmark/"+b.id,scrivibile(b));
     }
   },
 
@@ -1757,6 +1855,7 @@ const scrivibile=o=>{const c=clone(o); delete c.id; return c};
 async function salvaBench(b){
   const i=S.benchmarks.findIndex(x=>x.id===b.id);
   if(i<0) S.benchmarks.push(b); else S.benchmarks[i]=b;
+  b.aggiornato=new Date().toISOString();
   await Store.set("benchmark/"+b.id,scrivibile(b));
 }
 async function salvaDoc(d){

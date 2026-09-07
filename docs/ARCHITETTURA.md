@@ -358,3 +358,60 @@ fase 2, quando a parlarci è un server.
     coda: scrive i job              coda: esegue i job
 
     Il ponte è la coda. Roberto preme, poi dice "esegui la coda".
+
+
+---
+
+## 13. Fonti per famiglia merceologica (7 settembre 2026)
+
+Errore corretto: usavo le stesse fonti per tutto. HDblog e AVMagazine non
+hanno mai recensito un imbottito, Altroconsumo non testa i falegnami.
+Cercare nei posti sbagliati non dà risultati mediocri: **dà zero risultati,
+che è peggio, perché sembra una risposta**.
+
+`FAMIGLIE` classifica il benchmark per espressione regolare su tipo e
+titolo, e a ciascuna famiglia associa dove si leggono le opinioni e dove
+si compra:
+
+| Famiglia | Recensioni | Acquisto |
+|---|---|---|
+| elettronica | Reddit, HDblog, Tom's, AVMagazine, DDay, HWUpgrade | Amazon, MediaWorld, Unieuro, Euronics, Trovaprezzi |
+| elettrodomestico | Altroconsumo, Reddit, DDay, HWUpgrade | MediaWorld, Unieuro, Euronics, Expert, Trovaprezzi |
+| clima | EnergeticAmbiente, Altroconsumo, Reddit | rivenditori e installatori autorizzati |
+| arredo | Arredamento.it, Houzz, Reddit, Opinioni, Trustpilot | rivenditori e showroom |
+| bagno | Arredamento.it, Houzz, Reddit | rivenditori idrosanitari |
+| illuminazione | Arredamento.it, Houzz, Reddit | rivenditori e showroom |
+| serramenti | Arredamento.it, Reddit, Houzz | rivenditori e posatori |
+| domotica | Reddit, HWUpgrade, Tom's, DDay | Amazon, Trovaprezzi |
+| servizio | Houzz, Trustpilot, Reddit | **Google Maps**, non un negozio |
+
+Per un servizio le tre voci cambiano nome: «Trova professionisti in zona»,
+«Cerca preventivi», «Cerca esperienze e recensioni». Cercare dove
+comprare un imbianchino non ha senso.
+
+### La query, che era il difetto peggiore
+
+Mettevo marca e modello interi fra virgolette. Con un campo `modello` che
+conteneva la descrizione — «Marvin con penisola, tessuto sfoderabile» — la
+ricerca cercava una frase esatta che non esiste da nessuna parte.
+
+Due difese, perché una sola non basta:
+
+1. `sigla()` estrae il nome commerciale: taglia alla prima virgola,
+   parentesi o separatore, e prima delle preposizioni descrittive
+   («con», «senza», «in», «da», «per», «a»). «Marvin con penisola,
+   tessuto sfoderabile» diventa «Marvin».
+2. Niente virgolette sulla frase intera, e `senzaEco()` evita di ripetere
+   la tipologia quando il modello già la contiene («Imbianchino
+   Imbianchino recensioni» non aiutava nessuno).
+
+La difesa vera resta il dato: nel campo `modello` va la sigla, la
+descrizione va nelle specifiche.
+
+### Ordinamento per data e ora
+
+Con più benchmark nello stesso giorno la data da sola non ordina niente:
+l'ultimo aggiornato restava in mezzo agli altri. Ogni scrittura di un
+benchmark aggiorna `aggiornato` con un timestamp ISO, l'elenco ordina su
+quello con fallback su `_agg` e poi sulla data, e la colonna mostra l'ora
+accanto al giorno quando la conosce.
