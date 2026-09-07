@@ -995,7 +995,7 @@ function righeBenchmark(){
         anno:c.anno?Number(c.anno):null, classe:c.classeEnergetica||"",
         costo:num(c.prezzo), rank:rank>=0?rank+1:null, tot:cands.length,
         data:b.data||"", ambiente:nomiAmbienti(b.ambienti), amb:b.ambienti||[],
-        dove:c.venditore||"", preferito:!!c.preferito, acquistato:!!c.acquistato,
+        dove:c.venditore||"", fornitura:b.fornitura||"", preferito:!!c.preferito, acquistato:!!c.acquistato,
         stato:b.stato||"bozza",
       });
     }
@@ -1047,7 +1047,8 @@ function vElenco(){
       <tbody>${righe.map(r=>`
         <tr class="clickable" data-act="go" data-route="b/${r.bid}">
           <td class="num tiny">${dataIt(r.data)}</td>
-          <td><div>${esc(r.titolo)}</div><div class="tiny">${esc(r.tipo)}</div></td>
+          <td><div>${esc(r.titolo)}</div><div class="tiny">${esc(r.tipo)}${
+            r.fornitura==="impresa"?" · fornitura impresa":r.fornitura==="da chiarire"?" · fornitura da chiarire":""}</div></td>
           <td>${esc(r.marca)}</td>
           <td class="num tiny">${r.anno?esc(r.anno)+(generazioneSuperata(r.anno)?" ⚠":""):"—"}</td>
           <td class="tiny">${esc(r.classe||"—")}</td>
@@ -1108,6 +1109,11 @@ function vDettaglio(r){
       ${(b.ambienti||[]).map(id=>`<span class="chip">${esc(byId(S.ambienti,id)?.nome||id)}
         <button data-act="rm-amb" data-b="${b.id}" data-id="${id}" title="Rimuovi">×</button></span>`).join("")}
       <span class="chip pick soft" data-act="add-amb" data-b="${b.id}">+ ambiente</span>
+      ${b.fornitura?`<span class="chip ${b.fornitura==="nostra"?"":"soft"}"
+        title="${b.fornitura==="impresa"?"La fornitura è nel computo dell'impresa: il benchmark serve a verificare la scelta e il prezzo"
+          :b.fornitura==="nostra"?"Acquisto tuo: il computo prevede solo la posa, oppure non lo cita affatto"
+          :"Da chiarire con l'architetto chi fornisce"}">${
+        b.fornitura==="nostra"?"acquisto tuo":b.fornitura==="impresa"?"fornitura impresa":"fornitura da chiarire"}</span>`:""}
       ${b.bonusMobili?'<span class="chip soft">bonus mobili</span>':""}
     </div>
 
