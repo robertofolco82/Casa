@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bash deploy/build.sh vercel",
+  "outputDirectory": "dist",
+  "framework": null,
+  "functions": {
+    "api/claude.js": { "maxDuration": 60 }
+  },
+  "headers": [
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ]
+}

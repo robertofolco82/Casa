@@ -1,5 +1,12 @@
 # Mettere online il prototipo su Hostinger
 
+> **La strada scelta è Vercel**: vedi [VERCEL.md](VERCEL.md). Lì il ponte AI
+> è una funzione JavaScript che Vercel prende dal repository, e ogni `git push`
+> ripubblica il sito da solo. Hostinger resta per il dominio.
+>
+> Questa guida descrive l'alternativa PHP su Hostinger, che resta valida e
+> funzionante: la pagina riconosce da sola quale dei due ponti ha davanti.
+
 Obiettivo di questa fase: un indirizzo pubblico dove il servizio funziona
 davvero — benchmark, chat, planimetria, archivio — **senza attivare ancora
 nessun servizio a pagamento** oltre alla chiave Claude.

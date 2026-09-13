@@ -609,11 +609,15 @@ const Store={
 /* ─────────── PONTE — il modello quando la pagina vive su un hosting ───────────
    Fuori dall'artifact non esiste window.claude, e una pagina statica non può
    custodire una chiave API: chiunque aprisse il sorgente se la prenderebbe.
-   Quindi la chiave sta su un file PHP sul server (deploy/api/claude.php) e il
-   browser parla solo con quello. Stessa interfaccia dell'artifact, sorgente
-   diversa: le viste non sanno quale dei due sta rispondendo. */
+   Quindi la chiave sta sul server e il browser parla solo con un indirizzo
+   che gliela nasconde. Due implementazioni, stesso identico contratto:
+   api/claude    → funzione serverless su Vercel  (api/claude.js)
+   api/claude.php → file PHP su Hostinger          (deploy/api/claude.php)
+   La sonda prova entrambi e tiene quello che risponde, così lo stesso file
+   HTML funziona ovunque senza essere ricompilato. Le viste, da parte loro,
+   non sanno nemmeno quale dei due stia rispondendo. */
 const Ponte={
-  url:"api/claude.php", presente:false, motivo:"",
+  url:"", candidati:["api/claude","api/claude.php"], presente:false, motivo:"",
 
   codice(){ try{ return localStorage.getItem("raviola:codice")||"" }catch{ return "" } },
   salvaCodice(c){ try{ localStorage.setItem("raviola:codice",c||"") }catch{} },
@@ -622,14 +626,21 @@ const Ponte={
   /* Sonda gratuita: un GET riceve 405 e non consuma un solo token.
      Dice anche se il ponte c'è ma non è ancora configurato. */
   async sonda(){
-    try{
-      const r=await fetch(this.url,{method:"GET"});
-      const d=await r.json().catch(()=>null);
-      if(r.status===405&&d?.errore==="metodo"){ this.presente=true; this.motivo=""; return true }
-      if(d?.errore==="non_configurato"||d?.errore==="chiave_mancante"){
-        this.presente=false; this.motivo=d.messaggio; return false }
-      this.presente=false; this.motivo=""; return false;
-    }catch{ this.presente=false; this.motivo=""; return false }
+    this.presente=false; this.motivo=""; this.url="";
+    for(const url of this.candidati){
+      let r=null,d=null;
+      try{
+        r=await fetch(url,{method:"GET"});
+        d=await r.json().catch(()=>null);
+      }catch{ continue }
+      if(r.status===405&&d?.errore==="metodo"){
+        this.url=url; this.presente=true; this.motivo=""; return true }
+      /* Il ponte c'è ma gli manca la chiave: vale la pena dirlo, invece di
+         lasciar credere che non esista. */
+      if(d?.errore==="non_configurato"||d?.errore==="chiave_mancante")
+        this.motivo=d.messaggio;
+    }
+    return false;
   },
 
   async chiama(prompt,{tier="default",json=false,stream=false,onText,signal}={}){

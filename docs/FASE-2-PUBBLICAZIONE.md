@@ -39,7 +39,7 @@ deploy separato che riusa lo stesso codice di interfaccia.
 ```
    Browser / App mobile
           │
-          ├── Frontend statico (la SPA attuale)          Hostinger
+          ├── Frontend statico (la SPA attuale)          Vercel
           │
           ├── Supabase                        auth · dati · file · funzioni
           │     ├── Auth            email+password, reset, cancellazione
@@ -58,14 +58,21 @@ tocca mai il browser.** Frontend → Edge Function → servizio esterno. Sempre.
 
 ## 4. Servizi di terze parti, uno per uno
 
-### 4.1 Hostinger — frontend
-Già disponibile. La SPA è un file HTML senza build: si serve come sito
-statico. I piani Business e Cloud permettono anche deploy Node da GitHub;
-per il nostro caso basta lo statico. Serve un dominio e il certificato TLS
-(incluso). **Costo: quello dell'hosting già pagato + dominio.**
+### 4.1 Vercel — frontend e ponte AI
+**Scelto** (settembre 2026). La SPA è un file HTML senza build e si serve
+come sito statico; accanto, `api/claude.js` diventa una funzione serverless
+che custodisce la chiave Anthropic in una variabile d'ambiente. Il
+repository GitHub è collegato: ogni push ripubblica. Piano Hobby gratuito,
+TLS incluso. Procedura completa in `deploy/VERCEL.md`.
 
-Alternativa se in futuro servisse SSR: Vercel o Netlify, entrambi con free
-tier generoso. Non serve adesso.
+Il piano Hobby è per uso non commerciale: quando RAVIOLA32 inizierà a
+vendere, serve il Pro (20 $/mese per utente).
+
+**Hostinger resta**, con un ruolo preciso: è dove si compra e si gestisce il
+dominio, che poi si punta su Vercel via DNS. La pubblicazione PHP su
+Hostinger (`deploy/README.md`, `deploy/api/claude.php`) è mantenuta come
+alternativa funzionante — la pagina riconosce da sola quale ponte ha davanti,
+quindi la scelta è reversibile senza toccare il codice.
 
 ### 4.2 Supabase — account, dati, file
 Progetto già creato (ref `rusiwikqzxzyjrnihrgm`, regione eu-west-1, Postgres 17.6),
@@ -250,7 +257,8 @@ li paga l'utente.** È il senso dell'opzione, ma deve saperlo prima.
 
 1. **Account e dati** — Supabase Auth + RLS, migrazione dello Store dal
    backend `db` a `supabase`. Senza questo, niente ha senso.
-2. **Deploy su Hostinger** — dominio, TLS, la SPA servita davvero.
+2. **Deploy su Vercel** — repository collegato, chiave in variabile
+   d'ambiente, dominio Hostinger puntato via DNS, TLS automatico.
 3. **Freemium** — contatori di benchmark, messaggi e file per utente.
 4. **Pagamenti** — Stripe Billing + Checkout, poi fatturazione SDI.
 5. **Rendering** — Edge Function verso fal.ai, gated su Premium.
@@ -266,7 +274,8 @@ si costruisce accanto.
 
 | Voce | Costo |
 |---|---|
-| Hostinger | già pagato |
+| Vercel (Hobby) | 0 € finché non si vende nulla, poi 20 $/mese |
+| Hostinger | già pagato, serve per il dominio |
 | Dominio | ~10-15 €/anno |
 | Supabase | $0 fino ai limiti del free, poi $25/mese |
 | Stripe | nessun fisso, solo commissioni sulle transazioni |

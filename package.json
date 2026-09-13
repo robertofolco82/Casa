@@ -1,0 +1,12 @@
+{
+  "name": "raviola32",
+  "private": true,
+  "version": "1.0.0",
+  "description": "RAVIOLA32 — benchmark d'acquisto per la casa. L'app è un file HTML solo; qui sotto c'è soltanto il ponte serverless verso Claude.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "bash deploy/build.sh vercel",
+    "build:hostinger": "bash deploy/build.sh"
+  }
+}

@@ -593,3 +593,65 @@ narrazione datata («budget fissato il…, dopo aver verificato che…»), ma
 c'è anche un vincolo fisico vero e load-bearing — la parete del divano
 non è quotata nella tavola post operam e va misurata prima di ordinare.
 Quello non va cancellato, va solo ripulito dal resoconto.
+
+## 18. Il ponte AI e la scelta dell'hosting (13 settembre 2026)
+
+### Il problema, in una riga
+
+Una pagina statica non può custodire un segreto. Fuori dall'artifact non
+esiste `window.claude`, e mettere la chiave API nel JavaScript significa
+regalarla: il sorgente di una pagina web è pubblico per definizione, e
+esistono robot che scandagliano il web esattamente per raccoglierle.
+
+### La forma della soluzione
+
+Un **ponte**: un pezzo di codice che gira sul server, tiene la chiave e
+accetta dal browser solo quello che deve. Il browser non sa nulla della
+chiave; sa solo un indirizzo.
+
+Il ponte esiste in due implementazioni, con **lo stesso identico contratto**:
+
+| | dove | la chiave sta in |
+|---|---|---|
+| `api/claude.js` | Vercel, funzione serverless | variabile d'ambiente del progetto |
+| `deploy/api/claude.php` | Hostinger, PHP | `api/config.php`, fuori dal repository |
+
+Il contratto, per esteso: `GET` → `405 {errore:"metodo"}` (la sonda gratuita);
+`POST` con `{codice, prompt, tier, json, stream}` → testo in streaming SSE
+oppure `{testo, uso:{input, output}}` in blocco. Errori sempre come
+`{errore, messaggio}`, e **nessun messaggio d'errore contiene mai la chiave**,
+nemmeno quando è Anthropic a lamentarsi della chiave stessa.
+
+Il terzo caso è l'artifact, dove il ponte non serve perché il modello è già
+in pagina. `AI.modo` vale `artifact | ponte | nessuno`, e le viste non sanno
+quale dei tre stia rispondendo.
+
+### La sonda gratuita
+
+`Ponte.sonda()` prova i candidati in ordine (`api/claude`, poi
+`api/claude.php`) con una `GET` e tiene il primo che risponde `405`. Costa
+zero token, distingue «ponte assente» da «ponte presente ma senza chiave», e
+permette allo **stesso file HTML di funzionare ovunque senza essere
+ricompilato**. È il motivo per cui la scelta dell'hosting resta reversibile.
+
+### Perché Vercel
+
+Scelta di Roberto, il 13 settembre 2026, fra le due. Le ragioni, in ordine
+di peso: la funzione serverless custodisce il segreto **nativamente**, senza
+un file da proteggere con `.htaccess`; ogni `git push` ripubblica senza FTP;
+il piano Hobby costa zero. Hostinger non sparisce — resta il posto dove si
+compra e si gestisce il dominio, che si punta su Vercel via DNS.
+
+Procedura completa: `deploy/VERCEL.md`. L'alternativa PHP resta mantenuta e
+funzionante in `deploy/README.md`.
+
+### Quello che il ponte non è
+
+Il limite per IP della funzione serverless vive **nella memoria
+dell'istanza**, non su un disco condiviso: più copie della funzione contano
+per conto proprio. Rallenta chi martella, non è una fortezza — e va detto
+così, non spacciato per protezione. Le due difese che tengono davvero
+stanno entrambe fuori dal codice: il **codice d'accesso** condiviso con i
+tester e il **tetto di spesa** impostato sulla console Anthropic. Il
+conteggio serio arriverà con l'anagrafica utenti della fase 2, quando ci
+sarà un database a cui chiedere.
