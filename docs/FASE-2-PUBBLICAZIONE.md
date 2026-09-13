@@ -84,17 +84,67 @@ schema applicato ma non ancora usato dall'app.
 **Pro $25/mese** quando si superano i limiti. Team $599/mese solo se serve
 la certificazione SOC2.
 
-### 4.3 Stripe — pagamenti
-- **Commissioni Italia**: 1,5% + 0,25 € per carte standard SEE; 1,9% + 0,25 €
-  per carte premium/business SEE; 2,9% + 0,25 € per carte extra-europee.
+### 4.3 Pagamenti — confronto, non solo Stripe
+Aggiornato il 13.09.2026 dopo la domanda di Roberto: esistono alternative
+più economiche o più semplici di Stripe?
+
+**Commissioni a confronto su un Premium ipotetico da 9,90 €/mese:**
+
+| Soluzione | Commissione | Su 9,90 € | IVA e fatture estere |
+|---|---|---|---|
+| Stripe standard | 1,5% + 0,25 € (carte SEE) | 0,40 € — **4,0%** | a carico nostro |
+| Mollie | simile su carte; PostePay 1,20% + 0,25 € | ~0,40 € | a carico nostro |
+| Stripe Managed Payments | standard + 3,5% | 0,75 € — 7,5% | gestite dalla piattaforma |
+| Paddle / Polar / Lemon Squeezy | 5% + $0,50 | ~0,95 € — **9,5%** | gestite dalla piattaforma |
+
+**La quota fissa domina sui piccoli importi.** I 50 centesimi di dollaro dei
+merchant of record valgono da soli il 5% di un ticket da 10 €: è il motivo
+per cui Paddle costa più del doppio di Stripe su questo prodotto, pur avendo
+una percentuale nominale simile.
+
+**Cosa fa un merchant of record** (Paddle, Polar, Lemon Squeezy, Stripe
+Managed Payments): diventa il venditore legale al posto nostro. Incassa
+l'IVA del paese del cliente, la versa, gestisce i contenziosi. Elimina OSS
+e adempimenti esteri — il nostro cliente fiscale diventa uno solo. Per
+questo costa 5-9% invece del 4%.
+
+**Decisione: si parte con Stripe standard.** A basso volume l'onere IVA è
+gestibile con il commercialista, e il risparmio è circa il 5% su ogni euro
+incassato. Un MoR va rivalutato quando le vendite estere diventano
+significative — e in quel caso **non Stripe Managed Payments**, che le
+fonti indicano come il più caro del mercato: Paddle e Polar costano meno a
+parità di servizio. Nota su Polar: la tariffa agevolata 4% + $0,40 è
+riservata agli account creati prima del 27 maggio 2026, quindi per noi non
+è più disponibile.
+
+Altri dettagli Stripe:
+- 1,9% + 0,25 € per carte premium/business SEE; 2,9% + 0,25 € extra-europee.
   Nessun canone fisso né costo di attivazione.
 - **Metodi**: carte, wallet (Apple/Google Pay), SEPA. Per **PayPal** va
   verificata l'attivazione sull'account italiano al momento del setup:
-  non l'ho confermata in questa ricerca, non darla per scontata.
-- **Stripe Billing** per gli abbonamenti ricorrenti; **Stripe Tax** per
-  calcolare l'IVA corretta quando si vende fuori Italia.
-- **Stripe Checkout** ospitato: riduce drasticamente il perimetro di
-  conformità PCI, perché i dati della carta non passano mai da noi.
+  non l'ho confermata in questa ricerca, non darla per scontata. Mollie lo
+  supporta nativamente, se diventasse un requisito bloccante.
+- **Stripe Billing** per i ricorrenti, **Stripe Tax** per l'IVA estera,
+  **Stripe Checkout** ospitato per non far passare mai da noi i dati della
+  carta (riduce drasticamente il perimetro PCI).
+
+### 4.3b Il modello di prezzo conta più del gateway
+
+Un fatto del prodotto che cambia i conti: **ristrutturare ha una fine.**
+Nessuno usa RAVIOLA32 per sempre, lo usa per 6-18 mesi. Un abbonamento
+mensile su questo caso d'uso produce churn fisiologico e 12 transazioni
+all'anno per cliente.
+
+| Modello | Transazioni/anno | Commissioni/anno | Incidenza |
+|---|---|---|---|
+| 9,90 €/mese | 12 | 4,78 € su 118,80 € | 4,0% |
+| 99 € una tantum, 12 mesi di accesso | 1 | 1,74 € su 99 € | **1,8%** |
+
+L'una tantum dimezza l'incidenza delle commissioni, incassa subito, elimina
+il churn mensile e parla la lingua del cliente: «sto ristrutturando, pago
+per il progetto» è più naturale di un abbonamento da ricordarsi di disdire.
+Con un ticket da 99 € anche i MoR tornano ragionevoli (5,4%), quindi la
+strada internazionale resta aperta.
 
 ### 4.4 Fattura elettronica — Fatture in Cloud (o equivalente)
 Stripe **non** emette fatture verso SDI. Due obblighi distinti:
@@ -148,10 +198,27 @@ Costi ricorrenti non evitabili: **Apple Developer $99/anno**, **Google Play
 $25 una tantum**. Da mettere in conto anche il tempo delle revisioni degli
 store, che sui primi invii è imprevedibile.
 
-## 5. "Collega la tua AI" — la parte delicata
+## 5. "Collega la tua AI" — ridimensionata, non eliminata
 
-Custodire la chiave API di un altro è una responsabilità seria: se trapela,
-paga lui. Regole non negoziabili:
+Aggiornamento del 13.09.2026. La funzione è tecnicamente fattibile appena
+esistono le Edge Function: non era quello il limite. Il problema è di
+mercato, ed è dirimente.
+
+**Un abbonamento Claude Pro o ChatGPT Plus non è una chiave API.** Sono
+prodotti separati, con fatturazione separata. Chi dice «ho l'abbonamento a
+ChatGPT» quasi sempre **non ha niente da collegare**: dovrebbe aprire un
+account sulla console per sviluppatori, generare una chiave e inserire una
+carta a consumo. È una nicchia tecnica, non il pubblico di questo servizio.
+
+Conseguenze pratiche:
+- Resta come *perk* Premium per l'utente tecnico, costruita per ultima.
+- **Non è la leva per contenere i costi del piano gratuito.** Le leve vere
+  sono il modello giusto per ogni compito (classificare un PDF non richiede
+  il modello più potente) e il prompt caching, dato che il contesto della
+  casa si ripete identico a ogni messaggio.
+
+Se e quando si costruisce, custodire la chiave di un altro è una
+responsabilità seria: se trapela, paga lui. Regole non negoziabili:
 
 1. La chiave **non passa e non resta mai nel browser**.
 2. Cifrata a riposo con una chiave che vive solo nelle Edge Function, mai
