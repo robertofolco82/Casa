@@ -522,3 +522,37 @@ ECBNei9770 (76,2cm, 412L, BioFresh-Plus, prezzo non reperito nelle
 ricerche, tipicamente fascia molto alta); piano cottura top di gamma
 5/6 fuochi non completamente verificato (gap aperto, da controllare in
 showroom Miele/Gaggenau).
+
+## 16. Un benchmark, un pezzo (13 settembre 2026)
+
+Roberto, commentando direttamente dentro l'artifact: «questo testo non
+deve esserci. Non dobbiamo fare comparative di oggetti diversi
+contemporaneamente ma di un pezzo alla volta».
+
+Aveva ragione, ed era un errore di struttura, non di contenuto. Avevo
+creato un unico benchmark `elettro-cucina-samsung` che teneva insieme
+frigo, forno, piano cottura e lavastoviglie, perché erano venduti in un
+unico pacchetto. Ma il pacchetto è un fatto commerciale del venditore,
+non la forma della decisione: un frigo si confronta con altri frigo, mai
+con un forno. Mettendoli nello stesso record i candidati diventavano
+incomparabili fra loro, i punteggi perdevano significato e la classifica
+non voleva dire niente.
+
+Regola per il progetto, valida sempre:
+
+1. **Un benchmark contiene una sola decisione d'acquisto.** I `candidati`
+   sono alternative fra loro sostituibili: se due candidati non possono
+   sostituirsi a vicenda, non appartengono allo stesso benchmark.
+2. Quando il venditore propone un pacchetto, il pacchetto **non** diventa
+   un benchmark. Diventa un vincolo scritto nel campo `vincoli` di
+   ciascun benchmark coinvolto, con il prezzo attribuito a quella voce e
+   le conseguenze del sostituirla (qui: perdere la promozione).
+3. Anche l'analisi di un preventivo che copre più voci va spacchettata:
+   il documento resta uno solo nell'archivio, i benchmark sono tanti
+   quante le decisioni che contiene.
+
+Applicato: `elettro-cucina-samsung` è stato spacchettato in
+`forno-incasso`, `frigo-incasso`, `piano-cottura-induzione` e
+`lavastoviglie-incasso`, ognuno con i suoi candidati confrontabili, il
+riferimento di fascia alta della sua categoria e il contesto del
+pacchetto Veneta nei vincoli. Il record originale è stato eliminato.
