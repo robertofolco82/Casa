@@ -92,6 +92,11 @@ Settings → Environment Variables):
 
 Spuntale per tutti e tre gli ambienti (Production, Preview, Development).
 
+> **Una variabile aggiunta dopo il deploy non entra in vigore da sola.**
+> Vercel le legge quando costruisce: se le aggiungi o le cambi dopo, vai su
+> **Deployments → ⋯ → Redeploy**, altrimenti il sito continua a girare con
+> la configurazione vecchia. È la causa numero uno di «ma l'ho messa!».
+
 Il **codice d'accesso** serve a non lasciare un rubinetto AI aperto su
 internet: senza, chiunque trovi l'indirizzo può consumare il tuo credito.
 Scegline uno lungo e non indovinabile — non è una password da ricordare, la
@@ -124,8 +129,16 @@ rispondere:
 {"errore":"metodo","messaggio":"Usa POST."}
 ```
 
+In realtà risponde qualcosa in più:
+
+```json
+{"errore":"metodo","messaggio":"Usa POST.","codiceConfigurato":true}
+```
+
 Sembra un errore ed è invece la risposta giusta: è la sonda che la pagina usa
-per capire se il ponte c'è, e **non consuma un solo token**. Se invece leggi
+per capire se il ponte c'è, e **non consuma un solo token**. `codiceConfigurato`
+dice se la seconda variabile è arrivata: se leggi `false`, l'assistente
+rifiuterà ogni richiesta e nessun codice digitato funzionerà. Se invece leggi
 `non_configurato` o `chiave_mancante`, la variabile d'ambiente non è arrivata:
 controlla di averla salvata e rifai il deploy (Deployments → ⋯ → Redeploy).
 
@@ -169,6 +182,7 @@ utente). Per la fase di prova non è un problema.
 |---|---|
 | La pagina si apre ma le funzioni AI non ci sono | il ponte non risponde: prova il passo 4 |
 | `non_configurato` | variabile `ANTHROPIC_API_KEY` non salvata, o deploy non rifatto dopo averla aggiunta |
+| «Il server non ha ancora un codice d'accesso» | manca `RAVIOLA_CODICE_ACCESSO`, oppure è stata aggiunta senza rifare il deploy. Non è un tuo errore di digitazione: nessun codice funzionerebbe |
 | `chiave_mancante` | la chiave è stata incollata male (deve iniziare con `sk-ant-`) |
 | «Codice d'accesso non valido» | `RAVIOLA_CODICE_ACCESSO` diverso da quello che digiti |
 | «Troppe richieste» | il limite per IP. Alza `RAVIOLA_LIMITE_RICHIESTE` |

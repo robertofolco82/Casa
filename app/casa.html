@@ -240,6 +240,13 @@ td.best{background:var(--green-soft);font-weight:500}
 .chip.ghost{background:transparent;cursor:pointer;color:var(--ink2)}
 .chip.ghost:hover{border-color:var(--ink);color:var(--ink)}
 /* hero senza fotografia: niente scrim, quindi il testo torna scuro */
+/* Un'anteprima alta quanto una planimetria in verticale spingerebbe tutto il
+   resto fuori schermo: si contiene, senza deformarla. */
+.plan-prev{display:block;width:100%;max-width:100%;max-height:360px;object-fit:contain;
+  object-position:center top;border:1px solid var(--linea);border-radius:3px;background:#fff}
+.plan-prev-vuota{display:flex;align-items:center;justify-content:center;min-height:150px;
+  border:1px dashed var(--linea);border-radius:3px;background:var(--sand);
+  color:var(--ink2);text-align:center;padding:20px}
 .hero-lite{background:var(--sand)}
 .hero-lite .hero-in{padding:64px 28px 52px;min-height:0}
 .hero-lite .kick{color:var(--accent);text-shadow:none}
@@ -295,7 +302,9 @@ td.best{background:var(--green-soft);font-weight:500}
 .field>span.tiny{text-transform:none;letter-spacing:0;font-weight:400;
   font-size:11.5px;margin:6px 0 0;line-height:1.45}
 .empty{text-align:center;padding:56px 24px;color:var(--muted)}
-.empty svg{opacity:.35;margin-bottom:14px}
+/* L'icona dello stato vuoto non ha misure sue: senza questa riga si stira
+   per tutta la larghezza del contenitore e si mangia mezza pagina. */
+.empty svg{width:38px;height:52px;opacity:.35;margin-bottom:14px}
 .note{background:var(--sand);border-left:2px solid var(--accent);padding:12px 16px;font-size:13px;color:var(--ink2)}
 .note.warn{background:var(--danger-soft);border-left-color:var(--danger);color:var(--danger)}
 .meter{height:6px;background:var(--sand2);border-radius:3px;overflow:hidden}
@@ -618,6 +627,8 @@ const Store={
    non sanno nemmeno quale dei due stia rispondendo. */
 const Ponte={
   url:"", candidati:["api/claude","api/claude.php"], presente:false, motivo:"",
+  /* null = non lo so ancora; false = il server non ha un codice configurato */
+  codiceConfigurato:null,
 
   codice(){ try{ return localStorage.getItem("raviola:codice")||"" }catch{ return "" } },
   salvaCodice(c){ try{ localStorage.setItem("raviola:codice",c||"") }catch{} },
@@ -634,7 +645,9 @@ const Ponte={
         d=await r.json().catch(()=>null);
       }catch{ continue }
       if(r.status===405&&d?.errore==="metodo"){
-        this.url=url; this.presente=true; this.motivo=""; return true }
+        this.url=url; this.presente=true; this.motivo="";
+        if("codiceConfigurato" in (d||{})) this.codiceConfigurato=!!d.codiceConfigurato;
+        return true }
       /* Il ponte c'è ma gli manca la chiave: vale la pena dirlo, invece di
          lasciar credere che non esista. */
       if(d?.errore==="non_configurato"||d?.errore==="chiave_mancante")
@@ -649,7 +662,17 @@ const Ponte={
       body:JSON.stringify({codice:this.codice(),prompt,tier,json,stream}),
     });
 
-    if(r.status===401){ this.scordaCodice(); throw {code:"codice",message:"Codice d'accesso non valido"} }
+    if(r.status===401){
+      const d=await r.json().catch(()=>null);
+      /* Il server senza codice configurato respinge tutti: non e' un refuso
+         dell'utente e non va raccontato come tale. */
+      if(d?.errore==="codice_non_configurato"){
+        this.codiceConfigurato=false;
+        throw {code:"codice_non_configurato",message:d.messaggio};
+      }
+      this.scordaCodice();
+      throw {code:"codice",message:"Codice d'accesso non valido"};
+    }
     if(r.status===429) throw {code:"rate_limited",message:"Troppe richieste: aspetta qualche minuto"};
 
     if(!stream){
@@ -731,6 +754,8 @@ const AI={
       prompt_too_large:"Contesto troppo lungo: ho tagliato la conversazione, riprova.",
       overloaded:"Claude è sovraccarico in questo momento. Riprova fra poco.",
       codice:"Il codice d'accesso non è valido: reinseriscilo.",
+      codice_non_configurato:"Il server non ha ancora un codice d'accesso: "+
+        "va impostato nella configurazione del sito, non qui.",
       json_illeggibile:"La risposta non era nel formato atteso. Riprova.",
     };
     return m[e?.code]||e?.message||"Non sono riuscito a rispondere.";
@@ -832,7 +857,7 @@ const S={
   pronto:false,
   cfg:{pesi:Object.fromEntries(CRITERI.map(c=>[c.k,c.peso])),tema:"auto",tier:"default",
        lingua:"it",valuta:"EUR"},
-  casa:null,
+  casa:null, plan:null,
   ambienti:[], benchmarks:[], documenti:[], cartelle:[], coda:[],
   chatGlobale:{messaggi:[]},
   ui:{route:{n:"home"},chatAperta:false,busy:false,ordina:{k:"data",d:-1},
@@ -854,6 +879,7 @@ async function carica(){
   S.coda=await Store.list("coda");
   S.chatGlobale=(await Store.get("chat/globale"))||{messaggi:[]};
   S.casa=await Store.get("app/casa");
+  S.plan=await Store.get("app/planimetria");
   /* Gli ambienti non si seminano più: il servizio si apre come contenitore
      vuoto e li crea l'utente, dalla planimetria o a mano. Le cartelle sì,
      perché sono l'impalcatura dell'archivio, non contenuto dell'utente. */
@@ -867,6 +893,13 @@ const casaVuota = ()=>!S.casa && !S.ambienti.length;
 async function salvaCasa(patch){
   S.casa={...(S.casa||{}),...patch,aggiornato:new Date().toISOString()};
   await Store.set("app/casa",S.casa);
+}
+/* La planimetria caricata resta: una sola, l'ultima. Se ne arriva un'altra
+   prende il posto della precedente, perche' due planimetrie della stessa
+   casa non sono un archivio, sono un dubbio. */
+async function salvaPlan(dati){
+  S.plan={...dati,quando:new Date().toISOString()};
+  await Store.set("app/planimetria",S.plan);
 }
 async function seedCartelle(){
   for(const c of CARTELLE_DEF){
@@ -1101,38 +1134,102 @@ window.addEventListener("hashchange",()=>{
    spiegano cosa aspettarsi senza fingere che siano suoi. */
 const LIMITE_PLAN = 10 * 1024 * 1024;
 
-function vOnboarding(){
+/* ─────────── il box della planimetria, uno solo per tutta l'app ───────────
+   Lo usano la home e la pagina Ambienti. Se una planimetria c'e' gia', si
+   vede: l'anteprima e' la prova che il file caricato e' quello giusto, e il
+   pulsante dice fuori dai denti che la prossima prende il posto di questa.
+   Attenzione a non renderlo due volte nella stessa pagina: dentro ci sono
+   due id (#drop-plan, #file-plan) su cui si appoggiano drag&drop e change. */
+function boxPlanimetria(){
+  const p=S.plan, b=S.ui.bozzaCasa||{};
+
+  if(p && !S.ui.planSostituisci){
+    const quando=p.quando?new Date(p.quando).toLocaleDateString(valuta().loc):"";
+    const dettagli=[p.mq?`${p.mq} mq`:"", p.nAmbienti?`${p.nAmbienti} ambienti`:"", quando]
+      .filter(Boolean).join(" · ");
+    return `
+      ${p.anteprima
+        ?`<img class="plan-prev" src="${p.anteprima}" alt="Anteprima della planimetria caricata">`
+        :`<div class="plan-prev-vuota"><div class="tiny">Nessuna anteprima per questo file<br>
+           ma la planimetria e' stata letta</div></div>`}
+      <div class="spread" style="margin-top:14px;gap:12px;align-items:flex-start">
+        <div class="grow">
+          <div class="small">${esc(p.nome||"planimetria.pdf")}</div>
+          ${dettagli?`<div class="tiny">${esc(dettagli)}</div>`:""}
+        </div>
+      </div>
+      ${b.esitoPlan?`<div class="note" style="margin-top:14px">${esc(b.esitoPlan)}</div>`:""}
+      ${esitoAmbienti()}
+      <button class="btn ghost sm" style="margin-top:18px" data-act="sostituisci-planimetria">
+        Carica un'altra planimetria</button>
+      <div class="tiny" style="margin-top:10px">Ne tengo una sola: la prossima sostituisce questa.</div>`;
+  }
+
+  return `
+    ${p?`<div class="note" style="margin-bottom:14px">Quella che carichi adesso
+      sostituisce "${esc(p.nome||"la planimetria attuale")}".
+      <button class="link" data-act="annulla-sostituzione">Lascia quella di prima</button></div>`:""}
+    <div class="drop" id="drop-plan" data-drop="plan">
+      <div class="drop-in">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <div><b>Trascina qui la planimetria</b><br>
+          <span class="tiny">oppure <button class="link" data-act="scegli-plan">scegli un file</button>
+          &middot; PDF, massimo 10&nbsp;MB</span></div>
+      </div>
+    </div>
+    <input type="file" id="file-plan" accept="application/pdf,.pdf" hidden>
+    ${b.esitoPlan?`<div class="note" style="margin-top:14px">${esc(b.esitoPlan)}</div>`:""}
+    ${esitoAmbienti()}
+    <div class="tiny" style="margin-top:14px">Leggo quote, nomi delle stanze e destinazioni d'uso.
+      Il file non esce dal tuo computer: al modello arriva solo il testo estratto.</div>`;
+}
+
+/* Gli ambienti letti dalla planimetria, con il confronto su quelli che hai
+   gia': si aggiunge cio' che manca, non si sovrascrive cio' che hai sistemato. */
+function esitoAmbienti(){
+  const trovati=(S.ui.bozzaCasa?.ambienti||[]);
+  if(!trovati.length) return "";
+  const gia=new Set(S.ambienti.map(a=>a.nome.toLowerCase().trim()));
+  const nuovi=trovati.filter(a=>!gia.has(String(a.nome).toLowerCase().trim()));
+  return `<div style="margin-top:18px">
+    <div class="micro">Trovati ${trovati.length} ambienti${
+      nuovi.length<trovati.length?` &middot; ${trovati.length-nuovi.length} gi&agrave; presenti`:""}</div>
+    <div class="row-tight" style="margin-top:10px">
+      ${trovati.map(a=>{
+        const esiste=gia.has(String(a.nome).toLowerCase().trim());
+        return `<span class="chip ${esiste?"soft":""}">${esc(a.nome)}${
+          a.mq?` &middot; ${esc(String(a.mq))} mq`:""}${esiste?" &check;":""}</span>`}).join("")}
+    </div>
+    ${nuovi.length?`<button class="btn sm" style="margin-top:16px"
+      data-act="importa-ambienti">Aggiungi i ${nuovi.length} ambienti nuovi</button>`
+      :`<div class="tiny" style="margin-top:14px">Li hai gi&agrave; tutti: non c'&egrave; niente da aggiungere.</div>`}
+  </div>`;
+}
+
+/* Il percorso "costruisci la casa": sta SOTTO il benchmark, non al suo posto.
+   Il cuore del servizio e' il confronto d'acquisto, e quello si vede appena
+   si apre la pagina, anche a casa vuota. */
+function bloccoCostruisci(){
   const b=S.ui.bozzaCasa||{};
   const stanze=b.ambienti||[];
   return `
-  <section class="hero hero-lite">
-    <div class="hero-in">
-      <div class="micro kick">Benvenuto in RAVIOLA32</div>
-      <h1 class="display">Costruisci<br>la tua casa</h1>
-      <p class="lead">Carica la planimetria e la leggo io: ricavo gli ambienti e la lista
-        di cosa serve comprare, stanza per stanza. Se non ce l'hai, bastano due dati a mano.</p>
-    </div>
-  </section>
-
   <div class="wrap">
+    <section class="sec">
+      <div class="micro">Benvenuto in RAVIOLA32</div>
+      <h2 class="display" style="font-size:30px;margin:6px 0 8px">Costruisci la tua casa</h2>
+      <p class="tiny" style="max-width:640px">Carica la planimetria e la leggo io: ricavo gli
+        ambienti e la lista di cosa serve comprare, stanza per stanza. Se non ce l'hai,
+        bastano due dati a mano. Serve ad agganciare ogni acquisto alla sua stanza &mdash;
+        il benchmark qui sopra funziona anche prima.</p>
+    </section>
+
     <div class="grid g2" style="gap:28px;align-items:start">
 
       <section class="card">
         <div class="micro">1 · dalla planimetria</div>
         <h2 class="display" style="font-size:25px;margin:8px 0 12px">Carica il PDF</h2>
-        <div class="drop" id="drop-plan" data-drop="plan">
-          <div class="drop-in">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-              <path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-            <div><b>Trascina qui la planimetria</b><br>
-              <span class="tiny">oppure <button class="link" data-act="scegli-plan">scegli un file</button>
-              · PDF, massimo 10&nbsp;MB</span></div>
-          </div>
-        </div>
-        <input type="file" id="file-plan" accept="application/pdf,.pdf" hidden>
-        ${b.esitoPlan?`<div class="note" style="margin-top:14px">${esc(b.esitoPlan)}</div>`:""}
-        <div class="tiny" style="margin-top:14px">Leggo quote, nomi delle stanze e destinazioni d'uso.
-          Se la planimetria è una scansione senza testo te lo dico, e compili a mano.</div>
+        ${boxPlanimetria()}
       </section>
 
       <section class="card">
@@ -1205,7 +1302,6 @@ function vOnboarding(){
 }
 
 function vHome(){
-  if(casaVuota()) return vOnboarding();
   const recenti=sortBy(S.benchmarks,"data",-1).slice(0,4);
   const daDecidere=[];
   for(const b of S.benchmarks) for(const c of (b.candidati||[]))
@@ -1283,7 +1379,10 @@ function vHome(){
       ${recenti.length?`<div class="grid g4">${recenti.map(cardBench).join("")}</div>`
         :`<div class="empty">${icona("altro","")}<div>Nessun benchmark. Comincia da qui sopra.</div></div>`}
     </section>
+  </div>
 
+  ${casaVuota()?bloccoCostruisci():`
+  <div class="wrap">
     <section class="sec" style="padding-top:0">
       <div class="grid g2" style="gap:32px">
         <div>
@@ -1296,6 +1395,10 @@ function vHome(){
                 <div class="grow"><div>${esc(a.nome)}</div>
                   <div class="tiny">${esc(a.note||"")}</div></div>
                 <div class="tiny num">${n} ${n===1?"prodotto":"prodotti"}</div></div>`}).join("")}
+          </div>
+          <div class="card" style="margin-top:20px">
+            <div class="micro">Planimetria</div>
+            <div style="margin-top:12px">${boxPlanimetria()}</div>
           </div>
         </div>
         <div>
@@ -1322,7 +1425,7 @@ function vHome(){
         </div>
       </div>
     </section>
-  </div>`;
+  </div>`}`;
 }
 
 function cardBench(b){
@@ -1799,37 +1902,7 @@ function vAmbienti(){
         </div>
         <button class="link q" data-act="chiudi-planimetria">Chiudi</button>
       </div>
-      <div class="drop" id="drop-plan" data-drop="plan">
-        <div class="drop-in">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
-            <path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-          <div><b>Trascina qui la planimetria</b><br>
-            <span class="tiny">oppure <button class="link" data-act="scegli-plan">scegli un file</button>
-            · PDF, massimo 10&nbsp;MB</span></div>
-        </div>
-      </div>
-      <input type="file" id="file-plan" accept="application/pdf,.pdf" hidden>
-      ${S.ui.bozzaCasa?.esitoPlan?`<div class="note" style="margin-top:14px">
-        ${esc(S.ui.bozzaCasa.esitoPlan)}</div>`:""}
-      ${(()=>{
-        const trovati=(S.ui.bozzaCasa?.ambienti||[]);
-        if(!trovati.length) return "";
-        const gia=new Set(S.ambienti.map(a=>a.nome.toLowerCase().trim()));
-        const nuovi=trovati.filter(a=>!gia.has(String(a.nome).toLowerCase().trim()));
-        return `<div style="margin-top:18px">
-          <div class="micro">Trovati ${trovati.length} ambienti${
-            nuovi.length<trovati.length?` · ${trovati.length-nuovi.length} già presenti`:""}</div>
-          <div class="row-tight" style="margin-top:10px">
-            ${trovati.map(a=>{
-              const esiste=gia.has(String(a.nome).toLowerCase().trim());
-              return `<span class="chip ${esiste?"soft":""}">${esc(a.nome)}${
-                a.mq?` · ${esc(String(a.mq))} mq`:""}${esiste?" ✓":""}</span>`}).join("")}
-          </div>
-          ${nuovi.length?`<button class="btn sm" style="margin-top:16px"
-            data-act="importa-ambienti">Aggiungi i ${nuovi.length} ambienti nuovi</button>`
-            :`<div class="tiny" style="margin-top:14px">Li hai già tutti: non c'è niente da aggiungere.</div>`}
-        </div>`;
-      })()}
+      ${boxPlanimetria()}
     </div>`:""}
 
     <div class="grid g2">${S.ambienti.map(a=>{
@@ -2468,10 +2541,15 @@ async function nuovoJob(tipo,payload){
 /* Il codice d'accesso dell'anteprima pubblica: vive solo in questo browser,
    non è un account. Serve a non lasciare aperto un rubinetto AI su internet. */
 function chiediCodice(){
+  const senzaCodice=Ponte.codiceConfigurato===false;
   modale({
     titolo:"Codice d'accesso",
-    nota:"Questa anteprima usa l'assistente AI ed è protetta da un codice. "+
-      "Se non ce l'hai, chiedilo a chi ti ha mandato il link.",
+    nota:senzaCodice
+      ?"Il server non ha ancora un codice d'accesso configurato: finché manca, "+
+       "ogni richiesta viene respinta e non c'è codice che funzioni. "+
+       "Va impostato nella configurazione del sito."
+      :"Questa anteprima usa l'assistente AI ed è protetta da un codice. "+
+       "Se non ce l'hai, chiedilo a chi ti ha mandato il link.",
     campi:[{k:"codice",label:"Codice",val:Ponte.codice(),
       hint:"Resta salvato in questo browser: lo inserisci una volta sola."}],
     salva:v=>{
@@ -2718,6 +2796,28 @@ async function pdfLib(){
   }catch{ _pdfjs=false }
   return _pdfjs;
 }
+/* La prima pagina renderizzata in JPEG: serve a far vedere quale planimetria
+   e' caricata. Sta nell'archivio con tutto il resto, quindi resta piccola:
+   se supera il mezzo mega la lascio perdere e tengo solo il nome del file,
+   perche' un'anteprima non vale il rischio di riempire l'archivio. */
+const LIMITE_ANTEPRIMA=520*1024;
+async function anteprimaPdf(buf){
+  const lib=await pdfLib(); if(!lib) return "";
+  try{
+    const doc=await lib.getDocument({data:new Uint8Array(buf)}).promise;
+    const pg=await doc.getPage(1);
+    const base=pg.getViewport({scale:1});
+    const vp=pg.getViewport({scale:Math.min(820/base.width,1.6)});
+    const cv=document.createElement("canvas");
+    cv.width=Math.round(vp.width); cv.height=Math.round(vp.height);
+    const ctx=cv.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+    await pg.render({canvasContext:ctx,viewport:vp}).promise;
+    const url=cv.toDataURL("image/jpeg",0.7);
+    return url.length>LIMITE_ANTEPRIMA?"":url;
+  }catch(e){ console.warn("anteprima:",e); return "" }
+}
+
 async function estraiTesto(file,buf){
   const n=file.name.toLowerCase();
   if(/\.(txt|md|csv|json|log)$/.test(n)) return new TextDecoder().decode(buf).slice(0,120000);
@@ -2769,10 +2869,23 @@ async function leggiPlanimetria(file){
   if(file.size>LIMITE_PLAN)
     return toast(`"${file.name}" supera i 10 MB consentiti`,5000);
 
-  S.ui.bozzaCasa={...(S.ui.bozzaCasa||{}),esitoPlan:"Leggo la planimetria…"};
+  S.ui.bozzaCasa={...(S.ui.bozzaCasa||{}),esitoPlan:"Leggo la planimetria…",ambienti:[]};
   render();
 
   const buf=await file.arrayBuffer();
+  /* pdf.js puo' cedere il buffer al worker e lasciarlo svuotato: la copia si
+     prende adesso, prima che chiunque lo tocchi. */
+  const perAnteprima=buf.slice(0);
+
+  /* Senza lettore PDF non si distingue una scansione da un file pieno di
+     testo: sono due diagnosi diverse e vanno dette come tali. */
+  if(!(await pdfLib())){
+    S.ui.bozzaCasa.esitoPlan="Non sono riuscito a caricare il lettore di PDF "+
+      "(arriva da cdnjs.cloudflare.com): non è un problema del tuo file. "+
+      "Riprova fra poco, oppure compila a mano qui accanto.";
+    return render();
+  }
+
   const testo=await estraiTesto(file,buf);
   if(!testo){
     S.ui.bozzaCasa.esitoPlan="Questa planimetria non contiene testo selezionabile "+
@@ -2781,8 +2894,9 @@ async function leggiPlanimetria(file){
     return render();
   }
   if(!AI.pronto){
-    S.ui.bozzaCasa.esitoPlan="Ho estratto il testo ma il modello non è disponibile "+
-      "in questa vista: compila a mano, poi il file lo trovi in Documentazione.";
+    S.ui.bozzaCasa.esitoPlan="Ho estratto il testo ma il modello non è disponibile: "+
+      (AI.modo==="nessuno"&&Ponte.motivo?Ponte.motivo+" ":"")+
+      "compila a mano, poi il file lo trovi in Documentazione.";
     return render();
   }
   const p=`Questa è la tabella/legenda di una planimetria di appartamento.
@@ -2799,24 +2913,46 @@ dagli ambienti trovati (es. "piano cottura", "box doccia", "porte interne").
 TESTO DELLA PLANIMETRIA:
 ${testo.slice(0,20000)}`;
 
-  let r=null;
-  try{ r=await AI.json(p) }catch(e){ console.warn("planimetria:",e?.code) }
-  if(!r||!Array.isArray(r.ambienti)||!r.ambienti.length){
-    S.ui.bozzaCasa.esitoPlan="Non sono riuscito a ricavare gli ambienti da questo file. "+
-      "Compila a mano: è più veloce che insistere.";
+  /* Un errore del ponte non e' un difetto del file: dirlo male manda l'utente
+     a cercare una colpa dove non c'e'. Qui la causa vera arriva intera. */
+  let r=null,err=null;
+  try{ r=await AI.json(p) }catch(e){ err=e; console.warn("planimetria:",e?.code) }
+  if(err){
+    S.ui.bozzaCasa.esitoPlan=AI.copy(err)+
+      (err.code==="codice"?" Il file va bene: riprova dopo averlo inserito."
+       :" Il file l'ho letto: il problema è nella richiesta all'assistente.");
+    render();
+    if(err.code==="codice") setTimeout(chiediCodice,300);
+    return;
+  }
+  if(!r||!Array.isArray(r.ambienti)||!r.ambienti.filter(a=>a?.nome).length){
+    S.ui.bozzaCasa.esitoPlan="Ho letto il file ma non ci ho trovato ambienti riconoscibili: "+
+      "capita con le planimetrie senza legenda. Compila a mano: è più veloce che insistere.";
     return render();
   }
+
+  const ambienti=r.ambienti.filter(a=>a?.nome).map(a=>({nome:String(a.nome).slice(0,60),
+    mq:a.mq||"",note:a.note||""}));
   const b=S.ui.bozzaCasa||{};
   S.ui.bozzaCasa={...b,
     mq:r.mqTotali||b.mq||"",
-    ambienti:r.ambienti.filter(a=>a?.nome).map(a=>({nome:String(a.nome).slice(0,60),
-      mq:a.mq||"",note:a.note||""})),
+    ambienti,
     oggetti:(r.oggetti||[]).filter(Boolean).slice(0,12),
     planNome:file.name,
-    esitoPlan:`Letti ${r.ambienti.length} ambienti da "${file.name}". `+
+    esitoPlan:`Letti ${ambienti.length} ambienti da "${file.name}". `+
       `Controllali qui sotto e correggi quello che non torna: `+
       `la planimetria dice quasi sempre meno di quello che sai tu.`,
   };
+  S.ui.planSostituisci=false;
+  render();
+
+  /* L'anteprima arriva dopo: se il canvas fa i capricci, gli ambienti letti
+     restano comunque. */
+  let img="";
+  try{ img=await anteprimaPdf(perAnteprima) }catch(e){ console.warn("anteprima:",e) }
+  try{
+    await salvaPlan({nome:file.name,anteprima:img,mq:r.mqTotali||"",nAmbienti:ambienti.length});
+  }catch(e){ console.warn("plan:",e) }
   render();
 }
 
@@ -2919,9 +3055,15 @@ const A={
   /* ── onboarding: costruisci la tua casa ── */
   "scegli-plan":()=>$("#file-plan")?.click(),
   "apri-planimetria":()=>{S.ui.planAperta=true; render()},
-  "chiudi-planimetria":()=>{S.ui.planAperta=false;
+  "chiudi-planimetria":()=>{S.ui.planAperta=false; S.ui.planSostituisci=false;
     if(S.ui.bozzaCasa){S.ui.bozzaCasa.esitoPlan=""; S.ui.bozzaCasa.ambienti=[]}
     render()},
+  /* Sostituire non e' aggiungere: la nuova planimetria prende il posto della
+     vecchia, e l'utente lo legge prima di caricare, non dopo. */
+  "sostituisci-planimetria":()=>{S.ui.planSostituisci=true;
+    if(S.ui.bozzaCasa){S.ui.bozzaCasa.esitoPlan=""; S.ui.bozzaCasa.ambienti=[]}
+    render()},
+  "annulla-sostituzione":()=>{S.ui.planSostituisci=false; render()},
   /* La planimetria e' una sorgente, non un padrone: aggiunge gli ambienti
      che mancano e lascia stare quelli che hai gia' sistemato a mano. */
   "importa-ambienti":async()=>{

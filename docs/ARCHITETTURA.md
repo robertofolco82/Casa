@@ -655,3 +655,71 @@ stanno entrambe fuori dal codice: il **codice d'accesso** condiviso con i
 tester e il **tetto di spesa** impostato sulla console Anthropic. Il
 conteggio serio arriverà con l'anagrafica utenti della fase 2, quando ci
 sarà un database a cui chiedere.
+
+## 19. Artefatto e sito pubblicato: cosa cambia davvero (13 settembre 2026)
+
+Alla prima apertura del sito su Vercel mancavano il benchmark e la foto: la
+home mostrava solo «Costruisci la tua casa». Sembrava che la pubblicazione
+avesse perso metà del prodotto. **Non aveva perso niente.**
+
+`md5sum app/casa.html` e `md5sum dist/index.html` davano lo stesso valore, e
+quel file è lo stesso pubblicato come artefatto. Il codice era identico. A
+cambiare era **lo stato**, e con lo stato la vista.
+
+### Le quattro differenze, tutte di ambiente e nessuna di codice
+
+| | artefatto | sito pubblicato |
+|---|---|---|
+| Archivio | `db` del progetto, con la casa di Roberto già dentro | `localStorage` del browser, vuoto al primo accesso |
+| Modello | in pagina, `window.claude` | ponte serverless + codice d'accesso |
+| Connettori (Drive) | disponibili | assenti |
+| Prima schermata | home piena | home a casa vuota |
+
+La prima riga spiega da sola il fenomeno: `casaVuota()` era vero, e la home
+**restituiva l'onboarding al posto di sé stessa**.
+
+### L'errore di progetto sotto l'equivoco
+
+Far sparire il cuore del servizio finché la casa non è dichiarata è una
+scelta che nessuno aveva preso consapevolmente: era il modo più comodo di
+implementare «il sito si apre come un contenitore da riempire». Ma un
+contenitore vuoto deve **mostrare a cosa serve**, non nasconderlo dietro un
+modulo di registrazione mascherato.
+
+Da qui la regola: **la home apre sempre sul benchmark.** Foto, campo di
+ricerca e «Ultimi benchmark» ci sono dal primo secondo, a casa vuota come a
+casa piena. La costruzione della casa (planimetria, ambienti a mano, stile e
+budget) sta sotto, dove serve a chi ha già capito perché è lì.
+
+### Il corollario che vale per tutto il progetto
+
+Una differenza fra due ambienti non è una regressione finché non si è
+confrontato il codice. Il primo comando da dare non è «cosa ho rotto» ma
+`md5sum`. E quando il codice è identico, la domanda giusta diventa un'altra:
+**quale stato rende diverso lo stesso programma?**
+
+## 20. Dare la colpa alla cosa sbagliata (13 settembre 2026)
+
+Caricando una planimetria con il codice d'accesso non ancora valido, l'app
+rispondeva: «Non sono riuscito a ricavare gli ambienti da questo file.
+Compila a mano». Il file era perfetto. A fallire era l'autenticazione al
+ponte, tre passaggi più in là.
+
+È lo stesso difetto del §14, spostato dall'analisi all'interfaccia: **si
+afferma una causa che non si è verificata**, e si manda l'utente a cercare
+un guasto dove non c'è. Un `catch` che inghiotte il codice d'errore e
+stampa un messaggio unico non è robustezza, è una diagnosi inventata.
+
+Corretto così, e la regola vale per ogni messaggio d'errore del prodotto:
+
+1. **Ogni causa ha il suo messaggio.** Codice d'accesso rifiutato, limite di
+   richieste, errore del server, lettore PDF non caricato, scansione senza
+   testo, e solo in ultimo «il file non contiene ambienti riconoscibili».
+2. **Quando la colpa non è dell'utente, si dice.** «Il file va bene: il
+   problema è nella richiesta all'assistente.»
+3. **Il messaggio porta dove si risolve.** Un codice mai configurato sul
+   server si sistema nel pannello dell'hosting, e l'app lo scrive: la sonda
+   `GET` risponde `codiceConfigurato`, e un `POST` senza codice configurato
+   torna `codice_non_configurato`, non `codice`.
+4. **Niente messaggio generico come rete di sicurezza.** Se una causa non è
+   prevista, si mostra quella vera del ponte, non una plausibile.

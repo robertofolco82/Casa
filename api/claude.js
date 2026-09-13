@@ -84,17 +84,30 @@ export default async function handler(req, res) {
       "La chiave API non è configurata correttamente sul server.");
 
   /* Il GET è la sonda gratuita: risponde 405 e non consuma un token.
-     Serve alla pagina per capire se il ponte esiste prima di provarci. */
+     Serve alla pagina per capire se il ponte esiste prima di provarci, e le
+     dice anche se il codice d'accesso è stato configurato: senza, ogni
+     richiesta verrebbe respinta e l'utente cercherebbe un refuso che non c'è. */
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return stop(res, 405, "metodo", "Usa POST.");
+    res.statusCode = 405;
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.end(JSON.stringify({
+      errore: "metodo", messaggio: "Usa POST.", codiceConfigurato: !!atteso,
+    }));
   }
 
   const req_ = await corpo(req);
   if (!req_ || typeof req_ !== "object")
     return stop(res, 400, "corpo", "Corpo della richiesta non valido.");
 
-  if (!atteso || !uguali(atteso, String(req_.codice ?? "")))
+  /* Un codice mancante e un codice sbagliato respingono entrambi, ma non
+     sono lo stesso problema: il primo si risolve nel pannello di Vercel, il
+     secondo digitando meglio. Dirlo non regala niente a nessuno — senza
+     codice configurato l'endpoint non serve comunque nessuno. */
+  if (!atteso)
+    return stop(res, 401, "codice_non_configurato",
+      "Sul server manca RAVIOLA_CODICE_ACCESSO: aggiungila fra le variabili d'ambiente e rifai il deploy.");
+  if (!uguali(atteso, String(req_.codice ?? "")))
     return stop(res, 401, "codice", "Codice d'accesso non valido.");
 
   const max      = num(process.env.RAVIOLA_LIMITE_RICHIESTE, 30);

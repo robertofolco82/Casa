@@ -39,10 +39,19 @@ if (empty($cfg['api_key']) || !str_starts_with((string)$cfg['api_key'], 'sk-ant-
   stop(500, 'chiave_mancante', 'La chiave API non è configurata correttamente sul server.');
 }
 
-/* ─────────── solo POST ─────────── */
+/* ─────────── solo POST ───────────
+   Il GET è la sonda gratuita della pagina: dice che il ponte c'è e se il
+   codice d'accesso è stato configurato, così un server a metà non viene
+   scambiato per un errore di digitazione dell'utente. */
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   header('Allow: POST');
-  stop(405, 'metodo', 'Usa POST.');
+  http_response_code(405);
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode([
+    'errore' => 'metodo', 'messaggio' => 'Usa POST.',
+    'codiceConfigurato' => ((string)($cfg['codice_accesso'] ?? '') !== ''),
+  ], JSON_UNESCAPED_UNICODE);
+  exit;
 }
 
 /* ─────────── corpo della richiesta ─────────── */
@@ -55,7 +64,11 @@ if (!is_array($req)) stop(400, 'corpo', 'Corpo della richiesta non valido.');
    misurando quanto ci mette a rispondere. */
 $atteso = (string)($cfg['codice_accesso'] ?? '');
 $dato   = (string)($req['codice'] ?? '');
-if ($atteso === '' || !hash_equals($atteso, $dato)) {
+if ($atteso === '') {
+  stop(401, 'codice_non_configurato',
+    'Sul server manca codice_accesso in config.php: impostalo e riprova.');
+}
+if (!hash_equals($atteso, $dato)) {
   stop(401, 'codice', 'Codice d\'accesso non valido.');
 }
 
