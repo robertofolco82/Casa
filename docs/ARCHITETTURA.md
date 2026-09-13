@@ -416,35 +416,57 @@ benchmark aggiorna `aggiornato` con un timestamp ISO, l'elenco ordina su
 quello con fallback su `_agg` e poi sulla data, e la colonna mostra l'ora
 accanto al giorno quando la conosce.
 
-## 14. Analisi incollate da un'altra IA (13 settembre 2026)
+## 14. Analisi incollate da un'altra IA — e un falso positivo di Claude (13 settembre 2026)
 
 Roberto ha incollato un'analisi di ChatGPT sul divano Wolke di Westwing,
 confrontato con l'Hill Double di LeComfort. Verifica web sulle schede
 ufficiali: i dati costruttivi erano quasi tutti corretti (struttura,
-imbottitura, non-sfoderabilità, geometria seduta, garanzia, due delle
-misure citate). Ma due misure molto precise — «258×167 cm» e «3 posti
-con chaise da 282 cm» — non esistono su nessuna scheda prodotto
-pubblicata, e il numero 258 coincide in modo sospetto con l'ingombro
-outlet dell'Hill Double stesso (258×168), il vero prodotto che Roberto
-stava confrontando. Sembra un numero plausibile costruito per cadere
-dentro la fascia 270-295 cm già discussa, non un dato reale.
+imbottitura, non-sfoderabilità, geometria seduta, garanzia). Ma su due
+misure molto precise — «258×167 cm» e «3 posti con chaise da 282 cm» —
+Claude ha commesso un errore serio: dopo un numero limitato di ricerche
+web generiche andate a vuoto, ha scritto nel database e in questo
+documento che la configurazione «258×167 cm» **non esisteva**, arrivando
+persino a costruire una teoria («il numero coincide sospettosamente con
+l'ingombro dell'Hill Double, probabile confusione») per giustificare
+un'assenza che era solo un limite della propria ricerca, non un fatto.
 
-Regola per il progetto: un'analisi incollata da un altro assistente AI
-(ChatGPT o altro) va trattata come un'ipotesi da verificare, mai come un
-fatto. Prima di scriverla in un benchmark:
+Roberto ha smentito la cosa con uno screenshot diretto della scheda
+ufficiale westwing.it: la configurazione 258×167 cm esiste, è reale, era
+in promozione a 2.049 € (da 2.399 €). L'errore non è stato "fidarsi
+troppo di ChatGPT" — è stato l'opposto: **trasformare un fallimento
+della propria ricerca in un'affermazione di fatto**, e per di più
+accusatoria verso la fonte esterna. Corretto nel benchmark divano
+(`mtrcpmcxnsvsi`, candidato `div06`) e qui.
+
+Regola corretta per il progetto — vale per qualsiasi dato, che arrivi
+da un'altra IA, dalla memoria di Claude o da una ricerca web:
 
 1. Verificare via ricerca web reale ogni dato tecnico verificabile
-   (materiali, dimensioni, certificazioni, garanzia) sulla fonte
-   ufficiale, non fidarsi del testo incollato.
-2. Diffidare in particolare dei numeri troppo precisi e troppo comodi —
-   una misura che casca esattamente nel range che si sta cercando è un
-   segnale di allucinazione plausibile, va controllata a mano.
-3. Scrivere nel candidato sia cosa è confermato sia cosa non lo è
-   (campo `daVerificare` e un `contro` esplicito), invece di narrare
-   l'analisi esterna come se fosse già verificata.
+   (materiali, dimensioni, certificazioni, garanzia, prezzo) sulla
+   fonte ufficiale, non fidarsi del testo incollato né della propria
+   memoria.
+2. **Non trovare un dato non è prova che il dato sia falso.** Se la
+   ricerca web non conferma qualcosa, la formulazione corretta è «non
+   sono riuscito a verificarlo» (onesta, débole), mai «non esiste» o
+   «non risulta tra i prodotti pubblicati» (falsa certezza). I siti
+   e-commerce hanno spesso decine di varianti/SKU per lo stesso
+   prodotto che una manciata di ricerche generiche non copre.
+3. Prima di dichiarare un dato assente, provare più strategie (query
+   diverse, fetch diretto di più pagine prodotto/configuratore) e, se
+   restano dubbi, chiedere a Roberto un link o uno screenshot diretto
+   invece di concludere da soli.
+4. Mai costruire teorie speculative o accusatorie su una fonte esterna
+   (umana o IA) per spiegare un dato che non si è riusciti a
+   verificare — è un salto logico ingiustificato, ed è la cosa che
+   danneggia di più la fiducia quando si rivela sbagliato.
+5. Una prova di prima mano fornita da Roberto (screenshot, foto, link
+   diretto alla scheda) prevale sempre sulla ricerca indiretta di
+   Claude: si corregge subito, senza discutere.
+6. Scrivere nel candidato sia cosa è confermato sia cosa resta da
+   verificare (campo `daVerificare` e un `contro` esplicito), invece di
+   presentare una ricerca incompleta come conclusione definitiva.
 
-Applicato al benchmark divano (`mtrcpmcxnsvsi`): aggiunti i candidati
-reali `div05` (Hill Double, sfoderabile, 2.450 €, dato di Roberto) e
-`div06` (Wolke, non sfoderabile — il requisito che Roberto ha dichiarato
-importante — prezzo lasciato `null` perché la configurazione nella
-misura giusta non è confermata).
+Applicato al benchmark divano (`mtrcpmcxnsvsi`): `div05` (Hill Double,
+sfoderabile, 2.450 €, dato di Roberto) e `div06` (Wolke, non sfoderabile
+— requisito che Roberto ha dichiarato importante — 258×167 cm a 2.049 €
+promo, confermato da screenshot diretto).
