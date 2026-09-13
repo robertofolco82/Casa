@@ -470,3 +470,55 @@ Applicato al benchmark divano (`mtrcpmcxnsvsi`): `div05` (Hill Double,
 sfoderabile, 2.450 €, dato di Roberto) e `div06` (Wolke, non sfoderabile
 — requisito che Roberto ha dichiarato importante — 258×167 cm a 2.049 €
 promo, confermato da screenshot diretto).
+
+## 15. Sempre il top di gamma come riferimento (13 settembre 2026)
+
+Roberto ha fissato una regola valida per **tutti** i benchmark, di
+prodotti e di servizi, non solo per la cucina: non gli interessa
+risparmiare qualche centinaio di euro o vincere un premio che non
+userebbe. Vuole qualità, affidabilità e tecnologia aggiornata, è
+sensibile alla classe energetica (spendere di più oggi si ripaga nei
+consumi), e soprattutto vuole **sapere sempre chi è il top di gamma**
+in ogni categoria — caratteristiche e prezzo reale — anche quando quel
+prodotto è ben sopra il suo budget. Solo conoscendo il tetto della
+categoria può scegliere consapevolmente quanto scendere di fascia,
+invece di vedere solo alternative già pre-filtrate per budget.
+
+Regola operativa, per ogni benchmark futuro:
+
+1. **Includere sempre un candidato/riferimento "top di gamma" reale**,
+   non il più caro a caso ma il modello che fonti autorevoli
+   (Altroconsumo, testate di settore, forum specializzati) riconoscono
+   come il migliore della categoria — con caratteristiche e prezzo
+   verificati via ricerca web, anche se resta un riferimento e non una
+   proposta d'acquisto.
+2. **Verificare i "must have" espliciti di Roberto contro la scheda
+   tecnica reale, non per approssimazione.** Se un prodotto sembra
+   adatto ma una scheda tecnica verificata mostra che non rispetta un
+   vincolo dichiarato (una dimensione, una configurazione), va segnalato
+   come non conforme ed esplicitamente escluso — non proposto lo stesso
+   perché "abbastanza vicino".
+3. **Ragionare in costo totale nel tempo (TCO), non in prezzo
+   d'acquisto isolato**: un prezzo più alto con classe energetica
+   migliore o costruzione più durevole può convenire nel tempo. Il
+   campo `tco` (anniVita, costoKwh) già presente nello schema serve
+   esattamente a questo, va valorizzato più spesso.
+4. Il risparmio immediato e le promozioni collegate (sconti, premi)
+   restano informazioni utili da riportare, ma non devono guidare la
+   selezione dei candidati quando Roberto ha dichiarato esplicitamente
+   di non dare priorità al risparmio.
+
+Applicato subito al benchmark elettrodomestici cucina
+(`elettro-cucina-samsung`), con i must-have dichiarati (forno dual cook
+monoporta dimensione standard, induzione 5/6 fuochi non piccola, frigo
+75cm incasso dimensione standard): il forno Samsung NV7B5640TBK quotato
+da Veneta ha **doppia porta** (confermato sulla scheda tecnica,
+trovaincasso.it), non monoporta — non conforme. Il frigo Samsung
+BRB38G705DWW è largo **69cm**, non 75cm — non conforme. Il piano
+cottura Samsung NZ85C6058KK (80cm, 5 fuochi) rispetta il vincolo. Top di
+gamma verificati aggiunti come riferimento: forno Miele DGC 7150 (76L,
+steam combi, monoporta, A+, 1.552-1.999€); frigo Liebherr Monolith
+ECBNei9770 (76,2cm, 412L, BioFresh-Plus, prezzo non reperito nelle
+ricerche, tipicamente fascia molto alta); piano cottura top di gamma
+5/6 fuochi non completamente verificato (gap aperto, da controllare in
+showroom Miele/Gaggenau).
