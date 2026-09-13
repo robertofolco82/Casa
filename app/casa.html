@@ -355,11 +355,8 @@ td.best{background:var(--green-soft);font-weight:500}
       <div class="top-icons">
         <select class="selmini" id="sel-lingua" data-act="set-lingua" title="Lingua" aria-label="Lingua"></select>
         <select class="selmini" id="sel-valuta" data-act="set-valuta" title="Valuta" aria-label="Valuta"></select>
-        <button class="iconbtn" data-act="go" data-route="benchmark?fav=1" title="Preferiti" aria-label="Preferiti">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 20.5s-7.5-4.7-7.5-10A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.9c0 5.3-7.5 10-7.5 10z"/></svg>
-        </button>
-        <button class="iconbtn" data-act="toggle-theme" title="Tema" aria-label="Tema">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+        <button class="iconbtn" data-act="account" title="Account" aria-label="Account">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
         </button>
         <button class="iconbtn" data-act="go" data-route="impostazioni" title="Impostazioni" aria-label="Impostazioni">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
@@ -1774,11 +1771,55 @@ function vAmbienti(){
     <div class="sec-head">
       <div><div class="micro">La casa</div>
         <h1 class="display" style="font-size:38px">Ambienti</h1></div>
-      <button class="btn sm" data-act="add-ambiente">Nuovo ambiente</button>
+      <div class="row-tight">
+        <button class="btn ghost sm" data-act="apri-planimetria">Carica planimetria</button>
+        <button class="btn sm" data-act="add-ambiente">Nuovo ambiente</button>
+      </div>
     </div>
     <p class="lead" style="max-width:680px;margin-bottom:28px">
       Un benchmark può appartenere a più ambienti. Rinomina, aggiungi o elimina:
       i tag sui benchmark si aggiornano ovunque.</p>
+
+    ${S.ui.planAperta?`<div class="card" style="margin-bottom:28px">
+      <div class="spread" style="align-items:flex-start;margin-bottom:14px">
+        <div>
+          <div class="micro">Dalla planimetria</div>
+          <div class="serif" style="font-size:20px;margin-top:4px">Ricava gli ambienti da un PDF</div>
+        </div>
+        <button class="link q" data-act="chiudi-planimetria">Chiudi</button>
+      </div>
+      <div class="drop" id="drop-plan" data-drop="plan">
+        <div class="drop-in">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          <div><b>Trascina qui la planimetria</b><br>
+            <span class="tiny">oppure <button class="link" data-act="scegli-plan">scegli un file</button>
+            · PDF, massimo 10&nbsp;MB</span></div>
+        </div>
+      </div>
+      <input type="file" id="file-plan" accept="application/pdf,.pdf" hidden>
+      ${S.ui.bozzaCasa?.esitoPlan?`<div class="note" style="margin-top:14px">
+        ${esc(S.ui.bozzaCasa.esitoPlan)}</div>`:""}
+      ${(()=>{
+        const trovati=(S.ui.bozzaCasa?.ambienti||[]);
+        if(!trovati.length) return "";
+        const gia=new Set(S.ambienti.map(a=>a.nome.toLowerCase().trim()));
+        const nuovi=trovati.filter(a=>!gia.has(String(a.nome).toLowerCase().trim()));
+        return `<div style="margin-top:18px">
+          <div class="micro">Trovati ${trovati.length} ambienti${
+            nuovi.length<trovati.length?` · ${trovati.length-nuovi.length} già presenti`:""}</div>
+          <div class="row-tight" style="margin-top:10px">
+            ${trovati.map(a=>{
+              const esiste=gia.has(String(a.nome).toLowerCase().trim());
+              return `<span class="chip ${esiste?"soft":""}">${esc(a.nome)}${
+                a.mq?` · ${esc(String(a.mq))} mq`:""}${esiste?" ✓":""}</span>`}).join("")}
+          </div>
+          ${nuovi.length?`<button class="btn sm" style="margin-top:16px"
+            data-act="importa-ambienti">Aggiungi i ${nuovi.length} ambienti nuovi</button>`
+            :`<div class="tiny" style="margin-top:14px">Li hai già tutti: non c'è niente da aggiungere.</div>`}
+        </div>`;
+      })()}
+    </div>`:""}
 
     <div class="grid g2">${S.ambienti.map(a=>{
       const prod=prodottiDiAmbiente(a.id);
@@ -2431,7 +2472,7 @@ function chiediCodice(){
 }
 
 let _modaleSalva=null;
-function modale({titolo,campi,salva,nota}){
+function modale({titolo,campi,salva,nota,ok="Salva",soloOk=false}){
   _modaleSalva=salva;
   $("#modalmount").innerHTML=`<div class="scrim" data-act="chiudi-modale-bg">
     <div class="modal">
@@ -2444,8 +2485,8 @@ function modale({titolo,campi,salva,nota}){
         ${nota?`<div class="note">${nota}</div>`:""}
         ${campi.map(c=>campoHTML(c)).join("")}
         <div class="row" style="justify-content:flex-end;padding-top:8px">
-          <button class="btn ghost sm" data-act="chiudi-modale">Annulla</button>
-          <button class="btn sm" data-act="salva-modale">Salva</button>
+          ${soloOk?"":`<button class="btn ghost sm" data-act="chiudi-modale">Annulla</button>`}
+          <button class="btn sm" data-act="salva-modale">${esc(ok)}</button>
         </div>
       </div>
     </div></div>`;
@@ -2454,6 +2495,16 @@ function modale({titolo,campi,salva,nota}){
 function campoHTML(c){
   if(c.tipo==="hr") return '<hr>';
   if(c.tipo==="titolo") return `<div class="micro" style="margin-top:6px">${esc(c.label)}</div>`;
+  /* riga di solo testo: serve alle finestre che spiegano invece di chiedere */
+  if(c.tipo==="nota") return `<div class="small">${esc(c.label)}</div>`;
+  /* rimandi fra una finestra e l'altra (accedi ↔ registrati ↔ recupera) */
+  if(c.tipo==="azioni") return `<div class="row-tight" style="margin-top:2px">${
+    c.opz.map(([act,label])=>`<button class="link q" data-act="${esc(act)}">${esc(label)}</button>`)
+      .join('<span class="sep">·</span>')}</div>`;
+  if(c.tipo==="password") return `<label class="field"><span>${esc(c.label)}</span>
+    <input type="password" id="mf-${c.k}" data-mf="${c.k}" placeholder="${esc(c.ph||"")}"
+      autocomplete="new-password">
+    ${c.hint?`<span class="tiny">${esc(c.hint)}</span>`:""}</label>`;
   const id="mf-"+c.k;
   if(c.tipo==="area") return `<label class="field"><span>${esc(c.label)}</span>
     <textarea id="${id}" data-mf="${c.k}" placeholder="${esc(c.ph||"")}" rows="${c.rows||3}">${esc(c.val??"")}</textarea>
@@ -2840,8 +2891,6 @@ function apriDoc(id){
    ════════════════════════════════════════════════════════════════════════ */
 const A={
   go:(el)=>vai(el.dataset.route),
-  "toggle-theme":async()=>{const o=["auto","light","dark"];
-    await salvaCfg({tema:o[(o.indexOf(S.cfg.tema)+1)%3]}); applicaTema(); render()},
   tema:async el=>{await salvaCfg({tema:el.dataset.v}); applicaTema(); render()},
   tier:async el=>{await salvaCfg({tier:el.dataset.v}); render()},
   "tier-sel":async el=>{await salvaCfg({tier:el.value}); renderChat()},
@@ -2858,6 +2907,29 @@ const A={
 
   /* ── onboarding: costruisci la tua casa ── */
   "scegli-plan":()=>$("#file-plan")?.click(),
+  "apri-planimetria":()=>{S.ui.planAperta=true; render()},
+  "chiudi-planimetria":()=>{S.ui.planAperta=false;
+    if(S.ui.bozzaCasa){S.ui.bozzaCasa.esitoPlan=""; S.ui.bozzaCasa.ambienti=[]}
+    render()},
+  /* La planimetria e' una sorgente, non un padrone: aggiunge gli ambienti
+     che mancano e lascia stare quelli che hai gia' sistemato a mano. */
+  "importa-ambienti":async()=>{
+    const trovati=S.ui.bozzaCasa?.ambienti||[];
+    const gia=new Set(S.ambienti.map(a=>a.nome.toLowerCase().trim()));
+    let n=0;
+    for(const a of trovati){
+      if(gia.has(String(a.nome).toLowerCase().trim())) continue;
+      const id=uid();
+      const rec={nome:String(a.nome).slice(0,60),
+        note:a.mq?`${a.mq} mq`:(a.note||""),budget:null,creato:oggi()};
+      await Store.set("ambienti/"+id,rec);
+      S.ambienti.push({id,...rec}); n++;
+    }
+    S.ui.planAperta=false;
+    if(S.ui.bozzaCasa){S.ui.bozzaCasa.esitoPlan=""; S.ui.bozzaCasa.ambienti=[]}
+    toast(`${n} ${n===1?"ambiente aggiunto":"ambienti aggiunti"}`);
+    render();
+  },
   "sugg-amb":el=>{
     const b=S.ui.bozzaCasa||(S.ui.bozzaCasa={});
     b.ambienti=[...(b.ambienti||[]),{nome:el.dataset.n,mq:""}];
@@ -2896,6 +2968,62 @@ const A={
   },
   "premium-info":()=>vai("faq"),
   "chiedi-codice":()=>chiediCodice(),
+
+  /* ── Account ──────────────────────────────────────────────────────────
+     Le schermate ci sono tutte, e sono quelle vere. Quello che non c'e' e'
+     il server dietro: senza, autenticare e' impossibile e fingere di farlo
+     sarebbe peggio che dirlo. Ogni modulo lo dichiara e non finge di
+     riuscire. Quando il backend sara' collegato, cambia solo il salva. */
+  "account":()=>{
+    const dove=Store.backend==="db"
+      ? "Adesso i tuoi dati stanno nell'archivio del progetto: li ritrovi da ogni dispositivo con cui apri questo link."
+      : "Adesso i tuoi dati stanno in questo browser: non si spostano su altri dispositivi, e svuotando i dati del browser si perdono.";
+    modale({
+      titolo:"Accedi",
+      nota:"Anteprima: le schermate sono quelle definitive, ma l'accesso si attiva "+
+        "con la pubblicazione del servizio. "+dove,
+      campi:[
+        {k:"email",label:"Email",ph:"nome@esempio.it"},
+        {k:"password",label:"Password",tipo:"password",ph:"••••••••"},
+        {tipo:"azioni",opz:[["mostra-registrazione","Crea un account"],
+                            ["mostra-recupero","Password dimenticata"]]},
+      ],
+      salva:()=>{ chiudiModale();
+        toast("L'accesso si attiva con la pubblicazione del servizio",4200) },
+      ok:"Accedi",
+    });
+  },
+  "mostra-registrazione":()=>modale({
+    titolo:"Crea il tuo account",
+    nota:"Anteprima: il modulo è quello definitivo, la registrazione si attiva "+
+      "con la pubblicazione del servizio.",
+    campi:[
+      {k:"nome",label:"Come ti chiami",ph:"Roberto"},
+      {k:"email",label:"Email",ph:"nome@esempio.it",
+        hint:"Serve per ritrovare la tua casa e per recuperare la password"},
+      {k:"password",label:"Password",tipo:"password",ph:"almeno 10 caratteri"},
+      {k:"password2",label:"Ripeti la password",tipo:"password"},
+      {tipo:"hr"},
+      {k:"privacy",label:"Ho letto l'informativa e acconsento al trattamento dei miei dati",tipo:"check",val:false},
+      {tipo:"nota",label:"Per generare i confronti e rispondere nella chat, i contenuti che inserisci vengono elaborati da un fornitore di intelligenza artificiale. Puoi esportare o cancellare tutto in qualsiasi momento."},
+      {tipo:"azioni",opz:[["account","Ho già un account, accedi"]]},
+    ],
+    salva:()=>{ chiudiModale();
+      toast("La registrazione si attiva con la pubblicazione del servizio",4200) },
+    ok:"Crea account",
+  }),
+  "mostra-recupero":()=>modale({
+    titolo:"Recupera la password",
+    nota:"Anteprima: l'invio del link di recupero si attiva con la pubblicazione.",
+    campi:[
+      {k:"email",label:"Email dell'account",ph:"nome@esempio.it"},
+      {tipo:"nota",label:"Ti arriverà un link per scegliere una nuova password. Il link scade dopo poche ore."},
+      {tipo:"azioni",opz:[["account","Torna all'accesso"]]},
+    ],
+    salva:()=>{ chiudiModale();
+      toast("Il recupero password si attiva con la pubblicazione",4200) },
+    ok:"Inviami il link",
+  }),
   "salva-casa":async()=>{
     const g=id=>document.getElementById(id)?.value;
     await salvaCasa({mq:g("s-mq")||"",stile:g("s-stile")||"",budget:g("s-budget")||""});
