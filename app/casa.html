@@ -825,6 +825,7 @@ const S={
   ambienti:[], benchmarks:[], documenti:[], cartelle:[], coda:[],
   chatGlobale:{messaggi:[]},
   ui:{route:{n:"home"},chatAperta:false,busy:false,ordina:{k:"data",d:-1},
+      pf:{q:"",amb:"",stato:"",solomie:false}, ordinaP:{k:"ordStato",d:1},
       filtro:{q:"",amb:"",fav:false,acq:false},cartella:"tutte",menu:false},
 };
 
@@ -1029,6 +1030,7 @@ function apri(url){
 const SEZIONI=[
   {r:"home",l:"Home"},
   {r:"benchmark",l:"I tuoi benchmark"},
+  {r:"prodotti",l:"Prodotti"},
   {r:"ambienti",l:"Ambienti"},
   {r:"acquisti",l:"Acquisti"},
   {r:"documenti",l:"Documentazione"},
@@ -1064,8 +1066,9 @@ function renderTop(){
 function render(){
   renderNav(); renderTop();
   const v=$("#view"); const r=S.ui.route;
-  const viste={home:vHome,benchmark:vElenco,bench:vDettaglio,ambienti:vAmbienti,
-    acquisti:vAcquisti,documenti:vDocumenti,impostazioni:vImpostazioni,faq:vFaq};
+  const viste={home:vHome,benchmark:vElenco,bench:vDettaglio,prodotti:vProdotti,
+    ambienti:vAmbienti,acquisti:vAcquisti,documenti:vDocumenti,
+    impostazioni:vImpostazioni,faq:vFaq};
   const f=viste[r.n]||vHome;
   v.innerHTML=f(r);
   window.scrollTo({top:0,behavior:"instant"});
@@ -1421,6 +1424,153 @@ function vElenco(){
         </tr>`).join("")}</tbody>
     </table></div>`:`<div class="empty">${icona("altro")}
       <div style="margin-top:10px">Nessun benchmark corrisponde ai filtri.</div></div>`}
+  </section></div>`;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PRODOTTI — la lista della spesa, non l'archivio delle decisioni.
+
+   «I tuoi benchmark» risponde a "cosa ho confrontato". «Acquisti» risponde
+   a "quanto ho speso". Mancava la domanda che ci si fa più spesso durante
+   una ristrutturazione: "cosa mi manca ancora da comprare". Qui ogni riga è
+   una cosa da portare a casa, con lo stato in cui si trova lungo il
+   percorso: da cercare → in ricerca → da decidere → scelto → acquistato.
+   ════════════════════════════════════════════════════════════════════════ */
+const STATI_PROD={
+  "da-cercare": {l:"Da cercare", c:"b-att", o:1},
+  "in-ricerca": {l:"In ricerca", c:"b-att", o:2},
+  "da-decidere":{l:"Da decidere",c:"b-cor", o:3},
+  "scelto":     {l:"Scelto",     c:"b-fat", o:4},
+  "acquistato": {l:"Acquistato", c:"b-acq", o:5},
+};
+
+function righeProdotti(filtra=true){
+  const out=[];
+  for(const b of S.benchmarks){
+    const cands=classifica(b);
+    const acquistati=cands.filter(c=>c.acquistato);
+    const scelti=cands.filter(c=>c.preferito&&!c.acquistato);
+    /* Senza una scelta la riga resta una sola: la cosa da comprare è una,
+       anche quando i candidati in gara sono cinque. */
+    const mostra=(acquistati.length||scelti.length)?[...acquistati,...scelti]:[null];
+
+    for(const c of mostra){
+      const stato=c?.acquistato?"acquistato"
+        :c?"scelto"
+        :cands.length?"da-decidere"
+        :b.stato==="attesa"?"in-ricerca":"da-cercare";
+      out.push({
+        bid:b.id,
+        prodotto:b.titolo||"—",
+        tipo:b.tipo||"",
+        servizio:b.categoria==="servizio",
+        marca:c?([c.marca,c.modello].filter(Boolean).join(" ")||c.nome||"—"):"—",
+        ambiente:nomiAmbienti(b.ambienti)||"",
+        amb:b.ambienti||[],
+        prezzo:c?(num(c.prezzoPagato)??num(c.prezzo)):num(b.budget),
+        stimato:!c&&!!num(b.budget),
+        dove:c?.venditore||"",
+        fornitura:b.fornitura||"",
+        bonus:!!b.bonusMobili,
+        stato, ordStato:STATI_PROD[stato].o,
+        quanti:cands.length,
+      });
+    }
+  }
+  if(!filtra) return out;
+  const f=S.ui.pf||{};
+  return out.filter(r=>{
+    if(f.stato&&r.stato!==f.stato) return false;
+    if(f.amb&&!r.amb.includes(f.amb)) return false;
+    if(f.solomie&&r.fornitura==="impresa") return false;
+    if(f.q){
+      const q=f.q.toLowerCase();
+      if(!(r.prodotto+" "+r.marca+" "+r.tipo+" "+r.ambiente+" "+r.dove)
+          .toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function vProdotti(){
+  const f=S.ui.pf||(S.ui.pf={q:"",amb:"",stato:"",solomie:false});
+  const o=S.ui.ordinaP||(S.ui.ordinaP={k:"ordStato",d:1});
+  const righe=sortBy(righeProdotti(),o.k,o.d);
+  /* i totali si contano su tutto, non sul filtrato: un quadro che cambia
+     insieme ai filtri non è un quadro */
+  const tutte=righeProdotti(false);
+  const somma=s=>tutte.filter(r=>r.stato===s).reduce((t,r)=>t+(r.prezzo||0),0);
+  const conta=s=>tutte.filter(r=>r.stato===s).length;
+  const aperti=conta("da-decidere")+conta("in-ricerca")+conta("da-cercare");
+  const pronti=conta("scelto");
+
+  const th=(k,l)=>`<th class="sortable" data-act="ordina-prod" data-k="${k}">${l}${
+    o.k===k?`<span style="opacity:.6"> ${o.d>0?"↑":"↓"}</span>`:""}</th>`;
+
+  return `<div class="wrap"><section class="sec">
+    <div class="sec-head">
+      <div><div class="micro">Lista della spesa</div>
+        <h1 class="display" style="font-size:38px">Prodotti</h1></div>
+      <button class="btn sm" data-act="go" data-route="home">Nuovo benchmark</button>
+    </div>
+
+    <div class="grid g3" style="margin-bottom:28px">
+      <div class="card"><div class="micro">Già acquistato</div>
+        <div class="display num" style="font-size:32px;margin-top:6px">${eur(somma("acquistato"))}</div>
+        <div class="tiny">${conta("acquistato")} ${conta("acquistato")===1?"voce":"voci"}</div></div>
+      <div class="card"><div class="micro">Scelto, da comprare</div>
+        <div class="display num" style="font-size:32px;margin-top:6px">${eur(somma("scelto"))}</div>
+        <div class="tiny">${pronti} ${pronti===1?"voce pronta":"voci pronte"} all'ordine</div></div>
+      <div class="card"><div class="micro">Ancora da decidere</div>
+        <div class="display num" style="font-size:32px;margin-top:6px">${aperti}</div>
+        <div class="tiny">${aperti===1?"voce senza una scelta":"voci senza una scelta"}</div></div>
+    </div>
+
+    <div class="row" style="margin-bottom:18px">
+      <input id="pf-q" placeholder="Cerca prodotto, marca, ambiente…" value="${esc(f.q)}"
+        style="max-width:270px" data-act="pf-q">
+      <select id="pf-stato" data-act="pf-stato" style="max-width:165px">
+        <option value="">Tutti gli stati</option>
+        ${Object.entries(STATI_PROD).map(([k,v])=>
+          `<option value="${k}" ${f.stato===k?"selected":""}>${v.l}</option>`).join("")}
+      </select>
+      <select id="pf-amb" data-act="pf-amb" style="max-width:195px">
+        <option value="">Tutti gli ambienti</option>
+        ${S.ambienti.map(a=>`<option value="${a.id}" ${f.amb===a.id?"selected":""}>${esc(a.nome)}</option>`).join("")}
+      </select>
+      <span class="chip pick ${f.solomie?"on":""}" data-act="pf-solomie"
+        title="Nasconde le voci fornite dall'impresa">Compro io</span>
+      <div class="grow"></div>
+      <span class="tiny num">${righe.length} ${righe.length===1?"voce":"voci"}</span>
+    </div>
+
+    ${righe.length?`<div class="tscroll"><table>
+      <thead><tr>
+        ${th("prodotto","Prodotto")}${th("marca","Marca / Modello")}
+        ${th("ambiente","Ambiente")}${th("prezzo","Prezzo")}
+        ${th("dove","Dove")}${th("ordStato","Stato")}
+      </tr></thead>
+      <tbody>${righe.map(r=>{
+        const s=STATI_PROD[r.stato];
+        const sotto=[
+          esc(r.tipo||(r.servizio?"servizio":"")),
+          r.fornitura==="impresa"?`<span style="color:var(--accent)">fornisce l'impresa</span>`
+            :r.fornitura==="da chiarire"?"fornitura da chiarire":"",
+          r.bonus?"bonus mobili":"",
+        ].filter(Boolean).join(" · ");
+        return `<tr class="clickable" data-act="go" data-route="b/${r.bid}">
+          <td><div>${esc(r.prodotto)}</div>${sotto?`<div class="tiny">${sotto}</div>`:""}</td>
+          <td>${esc(r.marca)}${r.stato==="da-decidere"
+            ?`<div class="tiny">${r.quanti} a confronto</div>`:""}</td>
+          <td class="small">${esc(r.ambiente||"—")}</td>
+          <td class="num">${eur(r.prezzo)}${r.stimato?'<div class="tiny">budget</div>':""}</td>
+          <td class="small">${esc(r.dove||"—")}</td>
+          <td><span class="badge ${s.c}">${s.l}</span></td>
+        </tr>`}).join("")}</tbody>
+    </table></div>`:`<div class="empty">${icona("altro")}
+      <div style="margin-top:10px">${tutte.length
+        ?"Nessuna voce corrisponde ai filtri."
+        :"Nessun prodotto ancora. Ogni benchmark che apri compare qui."}</div></div>`}
   </section></div>`;
 }
 
@@ -2853,6 +3003,9 @@ const A={
     S.ui.ordina=S.ui.ordina.k===k?{k,d:-S.ui.ordina.d}:{k,d:k==="data"?-1:1}; render()},
   "filtro-fav":()=>{S.ui.filtro.fav=!S.ui.filtro.fav; render()},
   "filtro-acq":()=>{S.ui.filtro.acq=!S.ui.filtro.acq; render()},
+  "ordina-prod":el=>{const k=el.dataset.k;
+    S.ui.ordinaP=S.ui.ordinaP?.k===k?{k,d:-S.ui.ordinaP.d}:{k,d:1}; render()},
+  "pf-solomie":()=>{S.ui.pf.solomie=!S.ui.pf.solomie; render()},
   peso:async el=>{await salvaCfg({pesi:{...S.cfg.pesi,[el.dataset.k]:+el.value}}); render()},
 
   "apri-chat":()=>{S.ui.chatAperta=true; renderChat();
@@ -2937,6 +3090,11 @@ document.addEventListener("input",e=>{
     window._fd=setTimeout(()=>{const p=el.selectionStart; render();
       const n=document.querySelector('[data-act="filtro-doc"]'); if(n){n.focus(); n.setSelectionRange(p,p)}},260); return }
   if(act==="filtro-amb"){ S.ui.filtro.amb=el.value; render(); return }
+  if(act==="pf-q"){ S.ui.pf.q=el.value; clearTimeout(window._pq);
+    window._pq=setTimeout(()=>{const p=el.selectionStart; render();
+      const n=document.getElementById("pf-q"); if(n){n.focus(); n.setSelectionRange(p,p)}},260); return }
+  if(act==="pf-stato"){ S.ui.pf.stato=el.value; render(); return }
+  if(act==="pf-amb"){ S.ui.pf.amb=el.value; render(); return }
   if(act==="peso"){ A.peso(el); return }
 });
 document.addEventListener("keydown",e=>{
