@@ -415,3 +415,36 @@ l'ultimo aggiornato restava in mezzo agli altri. Ogni scrittura di un
 benchmark aggiorna `aggiornato` con un timestamp ISO, l'elenco ordina su
 quello con fallback su `_agg` e poi sulla data, e la colonna mostra l'ora
 accanto al giorno quando la conosce.
+
+## 14. Analisi incollate da un'altra IA (13 settembre 2026)
+
+Roberto ha incollato un'analisi di ChatGPT sul divano Wolke di Westwing,
+confrontato con l'Hill Double di LeComfort. Verifica web sulle schede
+ufficiali: i dati costruttivi erano quasi tutti corretti (struttura,
+imbottitura, non-sfoderabilità, geometria seduta, garanzia, due delle
+misure citate). Ma due misure molto precise — «258×167 cm» e «3 posti
+con chaise da 282 cm» — non esistono su nessuna scheda prodotto
+pubblicata, e il numero 258 coincide in modo sospetto con l'ingombro
+outlet dell'Hill Double stesso (258×168), il vero prodotto che Roberto
+stava confrontando. Sembra un numero plausibile costruito per cadere
+dentro la fascia 270-295 cm già discussa, non un dato reale.
+
+Regola per il progetto: un'analisi incollata da un altro assistente AI
+(ChatGPT o altro) va trattata come un'ipotesi da verificare, mai come un
+fatto. Prima di scriverla in un benchmark:
+
+1. Verificare via ricerca web reale ogni dato tecnico verificabile
+   (materiali, dimensioni, certificazioni, garanzia) sulla fonte
+   ufficiale, non fidarsi del testo incollato.
+2. Diffidare in particolare dei numeri troppo precisi e troppo comodi —
+   una misura che casca esattamente nel range che si sta cercando è un
+   segnale di allucinazione plausibile, va controllata a mano.
+3. Scrivere nel candidato sia cosa è confermato sia cosa non lo è
+   (campo `daVerificare` e un `contro` esplicito), invece di narrare
+   l'analisi esterna come se fosse già verificata.
+
+Applicato al benchmark divano (`mtrcpmcxnsvsi`): aggiunti i candidati
+reali `div05` (Hill Double, sfoderabile, 2.450 €, dato di Roberto) e
+`div06` (Wolke, non sfoderabile — il requisito che Roberto ha dichiarato
+importante — prezzo lasciato `null` perché la configurazione nella
+misura giusta non è confermata).
