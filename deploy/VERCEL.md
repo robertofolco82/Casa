@@ -143,7 +143,9 @@ rifiuterà ogni richiesta e nessun codice digitato funzionerà. Se invece leggi
 controlla di averla salvata e rifai il deploy (Deployments → ⋯ → Redeploy).
 
 Poi apri il sito: la prima volta che usi una funzione AI ti viene chiesto il
-codice d'accesso.
+codice d'accesso. **Il codice viene verificato appena lo scrivi** — la finestra
+ti dice subito se è giusto, se è sbagliato, o se il server non ne ha nessuno
+configurato. La verifica non chiama il modello e non consuma token.
 
 ### 5. Il tuo dominio, da Hostinger
 

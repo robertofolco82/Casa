@@ -100,6 +100,19 @@ export default async function handler(req, res) {
   if (!req_ || typeof req_ !== "object")
     return stop(res, 400, "corpo", "Corpo della richiesta non valido.");
 
+  /* Il limite per IP viene PRIMA del controllo sul codice: al contrario, chi
+     volesse indovinare il codice potrebbe provarci all'infinito senza mai
+     incontrare un freno. */
+  const max      = num(process.env.RAVIOLA_LIMITE_RICHIESTE, 30);
+  const finestra = num(process.env.RAVIOLA_LIMITE_FINESTRA, 600);
+  const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()
+          || req.socket?.remoteAddress || "ignoto";
+  if (limitato(ip, max, finestra)) {
+    res.setHeader("Retry-After", String(finestra));
+    return stop(res, 429, "troppe_richieste",
+      `Hai superato il limite di ${max} richieste ogni ${Math.floor(finestra / 60)} minuti. Riprova più tardi.`);
+  }
+
   /* Un codice mancante e un codice sbagliato respingono entrambi, ma non
      sono lo stesso problema: il primo si risolve nel pannello di Vercel, il
      secondo digitando meglio. Dirlo non regala niente a nessuno — senza
@@ -110,14 +123,12 @@ export default async function handler(req, res) {
   if (!uguali(atteso, String(req_.codice ?? "")))
     return stop(res, 401, "codice", "Codice d'accesso non valido.");
 
-  const max      = num(process.env.RAVIOLA_LIMITE_RICHIESTE, 30);
-  const finestra = num(process.env.RAVIOLA_LIMITE_FINESTRA, 600);
-  const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim()
-          || req.socket?.remoteAddress || "ignoto";
-  if (limitato(ip, max, finestra)) {
-    res.setHeader("Retry-After", String(finestra));
-    return stop(res, 429, "troppe_richieste",
-      `Hai superato il limite di ${max} richieste ogni ${Math.floor(finestra / 60)} minuti. Riprova più tardi.`);
+  /* Verifica secca del codice: risponde e basta, senza chiamare Anthropic.
+     Serve a dare il verdetto quando l'utente scrive il codice, invece di
+     fargli scoprire tre schermate dopo che era sbagliato. Zero token. */
+  if (req_.verifica === true) {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.end(JSON.stringify({ ok: true }));
   }
 
   const prompt = String(req_.prompt ?? "").trim();

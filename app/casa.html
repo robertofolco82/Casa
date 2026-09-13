@@ -656,6 +656,28 @@ const Ponte={
     return false;
   },
 
+  /* Chiede al server se questo codice va bene, e basta: nessuna chiamata al
+     modello, nessun token speso. Serve a dare il verdetto mentre l'utente
+     scrive, invece di lasciarglielo scoprire al primo errore utile. */
+  async verifica(codice){
+    if(!this.url) return {esito:"niente-ponte"};
+    try{
+      const r=await fetch(this.url,{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({codice,verifica:true}),
+      });
+      const d=await r.json().catch(()=>null);
+      if(r.ok&&d?.ok) return {esito:"ok"};
+      if(d?.errore==="codice_non_configurato"){
+        this.codiceConfigurato=false;
+        return {esito:"non-configurato",messaggio:d.messaggio};
+      }
+      if(r.status===401) return {esito:"sbagliato"};
+      if(r.status===429) return {esito:"troppe",messaggio:d?.messaggio||""};
+      return {esito:"errore",messaggio:d?.messaggio||`Errore ${r.status} dal server`};
+    }catch(e){ return {esito:"errore",messaggio:"Non raggiungo il server"} }
+  },
+
   async chiama(prompt,{tier="default",json=false,stream=false,onText,signal}={}){
     const r=await fetch(this.url,{
       method:"POST", headers:{"Content-Type":"application/json"}, signal,
@@ -2551,12 +2573,36 @@ function chiediCodice(){
       :"Questa anteprima usa l'assistente AI ed è protetta da un codice. "+
        "Se non ce l'hai, chiedilo a chi ti ha mandato il link.",
     campi:[{k:"codice",label:"Codice",val:Ponte.codice(),
-      hint:"Resta salvato in questo browser: lo inserisci una volta sola."}],
-    salva:v=>{
-      Ponte.salvaCodice(String(v.codice||"").trim());
-      toast("Codice salvato: riprova la richiesta");
-      render();
+      hint:senzaCodice
+        ?"Finché il server non ne ha uno, qualunque cosa scrivi qui verrà respinta."
+        :"Lo verifico subito. Se è giusto resta salvato in questo browser: lo inserisci una volta sola."}],
+    salva:async v=>{
+      const c=String(v.codice||"").trim();
+      if(!c) return toast("Scrivi il codice, o annulla");
+      toast("Verifico il codice…",2500);
+      const {esito,messaggio}=await Ponte.verifica(c);
+      if(esito==="ok"){
+        Ponte.salvaCodice(c);
+        chiudiModale();
+        toast("Codice corretto: puoi riprovare la richiesta",4000);
+        return render();
+      }
+      /* Non salvo un codice che il server rifiuta: tenerlo servirebbe solo a
+         far fallire la prossima richiesta allo stesso modo. */
+      if(esito==="non-configurato"){
+        toast(messaggio||"Il server non ha un codice d'accesso configurato",7000);
+        /* riapro la stessa finestra: ora sa perché nessun codice funzionerà */
+        return chiediCodice();
+      }
+      if(esito==="sbagliato") return toast("Questo codice il server lo rifiuta",4500);
+      if(esito==="troppe") return toast(messaggio||"Troppi tentativi: aspetta qualche minuto",5000);
+      if(esito==="niente-ponte"){
+        Ponte.salvaCodice(c); chiudiModale();
+        return toast("Codice salvato: qui non c'è un server da interrogare",4500);
+      }
+      toast(messaggio||"Non sono riuscito a verificare il codice",5000);
     },
+    ok:"Verifica e salva",
   });
 }
 

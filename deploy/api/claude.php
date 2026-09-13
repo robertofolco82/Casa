@@ -7,8 +7,8 @@
    prenderla e consumare il credito di Roberto. Qui la chiave resta sul
    server e il browser parla solo con questo file.
 
-   Cosa fa, nell'ordine: verifica il metodo, verifica il codice d'accesso,
-   verifica il limite per IP, gira la richiesta ad Anthropic e restituisce
+   Cosa fa, nell'ordine: verifica il metodo, applica il limite per IP,
+   verifica il codice d'accesso, gira la richiesta ad Anthropic e restituisce
    la risposta — in streaming per la chat, in blocco per le estrazioni JSON.
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -59,22 +59,11 @@ $grezzo = file_get_contents('php://input') ?: '';
 $req    = json_decode($grezzo, true);
 if (!is_array($req)) stop(400, 'corpo', 'Corpo della richiesta non valido.');
 
-/* ─────────── codice d'accesso ───────────
-   hash_equals confronta in tempo costante: non lascia dedurre il codice
-   misurando quanto ci mette a rispondere. */
-$atteso = (string)($cfg['codice_accesso'] ?? '');
-$dato   = (string)($req['codice'] ?? '');
-if ($atteso === '') {
-  stop(401, 'codice_non_configurato',
-    'Sul server manca codice_accesso in config.php: impostalo e riprova.');
-}
-if (!hash_equals($atteso, $dato)) {
-  stop(401, 'codice', 'Codice d\'accesso non valido.');
-}
-
 /* ─────────── limite per IP ───────────
    Una finestra scorrevole tenuta su file. Non è una difesa da fortezza,
-   ma impedisce a uno script di svuotare il credito mentre nessuno guarda. */
+   ma impedisce a uno script di svuotare il credito mentre nessuno guarda.
+   Viene PRIMA del controllo sul codice: al contrario, chi volesse indovinare
+   il codice potrebbe provarci all'infinito senza incontrare un freno. */
 function limita(array $cfg): void {
   $max      = (int)($cfg['limite_richieste'] ?? 30);
   $finestra = (int)($cfg['limite_finestra'] ?? 600);
@@ -102,6 +91,28 @@ function limita(array $cfg): void {
   @file_put_contents($file, json_encode($tempi), LOCK_EX);
 }
 limita($cfg);
+
+/* ─────────── codice d'accesso ───────────
+   hash_equals confronta in tempo costante: non lascia dedurre il codice
+   misurando quanto ci mette a rispondere. */
+$atteso = (string)($cfg['codice_accesso'] ?? '');
+$dato   = (string)($req['codice'] ?? '');
+if ($atteso === '') {
+  stop(401, 'codice_non_configurato',
+    'Sul server manca codice_accesso in config.php: impostalo e riprova.');
+}
+if (!hash_equals($atteso, $dato)) {
+  stop(401, 'codice', 'Codice d\'accesso non valido.');
+}
+
+/* Verifica secca del codice: risponde e basta, senza chiamare Anthropic.
+   Serve a dare il verdetto quando l'utente scrive il codice, invece di
+   fargli scoprire tre schermate dopo che era sbagliato. Zero token. */
+if (!empty($req['verifica'])) {
+  header('Content-Type: application/json; charset=utf-8');
+  echo json_encode(['ok' => true]);
+  exit;
+}
 
 /* ─────────── prompt ─────────── */
 $prompt = trim((string)($req['prompt'] ?? ''));

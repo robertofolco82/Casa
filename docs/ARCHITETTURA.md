@@ -723,3 +723,32 @@ Corretto così, e la regola vale per ogni messaggio d'errore del prodotto:
    torna `codice_non_configurato`, non `codice`.
 4. **Niente messaggio generico come rete di sicurezza.** Se una causa non è
    prevista, si mostra quella vera del ponte, non una plausibile.
+
+## 21. Il verdetto va dato quando serve (13 settembre 2026)
+
+Roberto, dopo il terzo rifiuto: *«continua a chiedere sto cazzo di codice»*.
+Aveva ragione. Il flusso era: scrivi il codice → «salvato, riprova» → riprova
+→ rifiutato → riscrivi il codice → e da capo. L'app **salvava un codice che
+non aveva mai verificato**, e rimandava il verdetto al primo uso utile.
+
+Tre difetti in un giro solo:
+
+1. **Verdetto rimandato.** Il momento in cui l'utente può correggere è quando
+   sta scrivendo, non due schermate dopo.
+2. **Si salvava comunque.** Un codice rifiutato tenuto in memoria serve solo
+   a far fallire allo stesso modo la richiesta successiva.
+3. **Nessun modo di distinguere** «questo codice è sbagliato» da «il server
+   non ha nessun codice, quindi nessun codice funzionerà mai».
+
+Rimedio: una verifica secca, `{"codice":"…","verifica":true}`, che il ponte
+soddisfa **senza chiamare Anthropic** — zero token. La finestra risponde
+subito e in modo diverso in ognuno dei quattro casi (giusto, sbagliato, server
+non configurato, server irraggiungibile), e **salva solo quando è giusto**.
+
+### Una conseguenza sulla sicurezza, colta per tempo
+
+Verificare un codice diventa gratis: anche per chi prova a indovinarlo. Nel
+ponte il controllo del codice stava **prima** del limite per IP, quindi i
+tentativi a vuoto non incontravano alcun freno. Ordine invertito in entrambe
+le implementazioni: **prima il limite, poi il codice.** Una funzione che
+diventa più comoda per l'utente non deve diventarlo per chi la attacca.
