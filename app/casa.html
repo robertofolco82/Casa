@@ -606,21 +606,111 @@ const Store={
    dalla coda dei job, che eseguo io in Claude Code (fase 1) o un cron
    su Vercel con le API (fase 2).
    ════════════════════════════════════════════════════════════════════════ */
+/* ─────────── PONTE — il modello quando la pagina vive su un hosting ───────────
+   Fuori dall'artifact non esiste window.claude, e una pagina statica non può
+   custodire una chiave API: chiunque aprisse il sorgente se la prenderebbe.
+   Quindi la chiave sta su un file PHP sul server (deploy/api/claude.php) e il
+   browser parla solo con quello. Stessa interfaccia dell'artifact, sorgente
+   diversa: le viste non sanno quale dei due sta rispondendo. */
+const Ponte={
+  url:"api/claude.php", presente:false, motivo:"",
+
+  codice(){ try{ return localStorage.getItem("raviola:codice")||"" }catch{ return "" } },
+  salvaCodice(c){ try{ localStorage.setItem("raviola:codice",c||"") }catch{} },
+  scordaCodice(){ try{ localStorage.removeItem("raviola:codice") }catch{} },
+
+  /* Sonda gratuita: un GET riceve 405 e non consuma un solo token.
+     Dice anche se il ponte c'è ma non è ancora configurato. */
+  async sonda(){
+    try{
+      const r=await fetch(this.url,{method:"GET"});
+      const d=await r.json().catch(()=>null);
+      if(r.status===405&&d?.errore==="metodo"){ this.presente=true; this.motivo=""; return true }
+      if(d?.errore==="non_configurato"||d?.errore==="chiave_mancante"){
+        this.presente=false; this.motivo=d.messaggio; return false }
+      this.presente=false; this.motivo=""; return false;
+    }catch{ this.presente=false; this.motivo=""; return false }
+  },
+
+  async chiama(prompt,{tier="default",json=false,stream=false,onText,signal}={}){
+    const r=await fetch(this.url,{
+      method:"POST", headers:{"Content-Type":"application/json"}, signal,
+      body:JSON.stringify({codice:this.codice(),prompt,tier,json,stream}),
+    });
+
+    if(r.status===401){ this.scordaCodice(); throw {code:"codice",message:"Codice d'accesso non valido"} }
+    if(r.status===429) throw {code:"rate_limited",message:"Troppe richieste: aspetta qualche minuto"};
+
+    if(!stream){
+      const d=await r.json().catch(()=>null);
+      if(!r.ok) throw {code:"proxy",message:d?.messaggio||`Errore ${r.status} dal server`};
+      return d?.testo||"";
+    }
+
+    /* SSE: i pezzi arrivano man mano, la chat scrive mentre il modello pensa */
+    if(!r.ok||!r.body){
+      const d=await r.json().catch(()=>null);
+      throw {code:"proxy",message:d?.messaggio||`Errore ${r.status} dal server`};
+    }
+    const lettore=r.body.getReader(), dec=new TextDecoder();
+    let resto="", testo="";
+    for(;;){
+      const {done,value}=await lettore.read();
+      if(done) break;
+      resto+=dec.decode(value,{stream:true});
+      const righe=resto.split("\n"); resto=righe.pop()||"";
+      for(const riga of righe){
+        if(!riga.startsWith("data:")) continue;
+        const corpo=riga.slice(5).trim();
+        if(!corpo||corpo==="[DONE]") continue;
+        let e=null; try{ e=JSON.parse(corpo) }catch{ continue }
+        if(e.messaggio) throw {code:"proxy",message:e.messaggio};
+        if(e.type==="content_block_delta"&&e.delta?.type==="text_delta"){
+          testo+=e.delta.text; onText?.(testo);
+        }
+        if(e.type==="error") throw {code:"proxy",message:e.error?.message||"Errore del servizio AI"};
+      }
+    }
+    return testo;
+  },
+};
+
 const AI={
-  fn:null, pronto:false,
+  fn:null, pronto:false, modo:"nessuno",   /* artifact | ponte | nessuno */
+
   async init(){
-    try{ this.fn=await window.claude?.use?.("sample"); this.pronto=!!this.fn }
-    catch{ this.pronto=false }
-    return this.pronto;
+    try{
+      this.fn=await window.claude?.use?.("sample");
+      if(this.fn){ this.modo="artifact"; this.pronto=true; return true }
+    }catch{}
+    if(await Ponte.sonda()){ this.modo="ponte"; this.pronto=true; return true }
+    this.modo="nessuno"; this.pronto=false; return false;
   },
+
   async testo(input,{tier="default",onText,signal}={}){
-    if(!this.fn) throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
-    const r=await this.fn(input,{modelTier:tier,onText,signal,cache:false});
-    return r.text;
+    if(this.modo==="artifact"){
+      const r=await this.fn(input,{modelTier:tier,onText,signal,cache:false});
+      return r.text;
+    }
+    if(this.modo==="ponte")
+      return await Ponte.chiama(input,{tier,stream:true,onText,signal});
+    throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
   },
+
   async json(input,{tier="default",signal}={}){
-    if(!this.fn) throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
-    return await this.fn.json(input,{modelTier:tier,signal});
+    if(this.modo==="artifact") return await this.fn.json(input,{modelTier:tier,signal});
+    if(this.modo==="ponte"){
+      const t=await Ponte.chiama(input,{tier,json:true,signal});
+      /* il modello a volte incornicia il JSON in un blocco markdown */
+      const pulito=String(t).replace(/^[\s\S]*?```(?:json)?\s*/,"").replace(/```[\s\S]*$/,"").trim()||t;
+      try{ return JSON.parse(pulito) }
+      catch{
+        const m=String(t).match(/\{[\s\S]*\}/);
+        if(m) try{ return JSON.parse(m[0]) }catch{}
+        throw {code:"json_illeggibile",message:"Il modello non ha restituito un JSON valido"};
+      }
+    }
+    throw {code:"not_granted",message:"Modello non disponibile in questa vista"};
   },
   copy(e){
     const m={
@@ -629,6 +719,8 @@ const AI={
       cancelled:"Richiesta interrotta.",
       prompt_too_large:"Contesto troppo lungo: ho tagliato la conversazione, riprova.",
       overloaded:"Claude è sovraccarico in questo momento. Riprova fra poco.",
+      codice:"Il codice d'accesso non è valido: reinseriscilo.",
+      json_illeggibile:"La risposta non era nel formato atteso. Riprova.",
     };
     return m[e?.code]||e?.message||"Non sono riuscito a rispondere.";
   },
@@ -1725,6 +1817,20 @@ function vImpostazioni(){
     <div class="sec-head"><div><div class="micro">Configurazione</div>
       <h1 class="display" style="font-size:38px">Impostazioni</h1></div></div>
 
+    <div class="card" style="margin-bottom:20px">
+      <div class="micro">Assistente AI</div>
+      <div class="small" style="margin-top:10px">
+        ${AI.modo==="artifact"?"Attivo: stai usando il modello incluso in questa vista."
+         :AI.modo==="ponte"?`Attivo attraverso il server${Ponte.codice()?" · codice inserito":" · codice non ancora inserito"}.`
+         :Ponte.motivo?esc(Ponte.motivo)
+         :"Non disponibile: i benchmark si creano lo stesso e restano in coda per la ricerca reale."}
+      </div>
+      ${AI.modo==="ponte"?`<div class="row" style="margin-top:14px;gap:10px">
+        <button class="btn ghost sm" data-act="chiedi-codice">
+          ${Ponte.codice()?"Cambia codice d'accesso":"Inserisci il codice d'accesso"}</button>
+      </div>`:""}
+    </div>
+
     ${S.casa?`<div class="card" style="margin-bottom:20px">
       <div class="micro">La tua casa</div>
       <div class="launcher-more" style="margin-top:12px">
@@ -2051,6 +2157,8 @@ const Chat={
       if(keep) add.push({r:"ai",t:keep,d:new Date().toISOString()});
       if(e?.code!=="cancelled") add.push({r:"err",t:AI.copy(e),d:new Date().toISOString()});
       await this.salva(scope,add);
+      /* codice sbagliato o mai inserito: chiederlo è l'unica via d'uscita */
+      if(e?.code==="codice") setTimeout(chiediCodice,300);
     }
     renderChat();
   },
@@ -2146,6 +2254,23 @@ async function nuovoJob(tipo,payload){
 }
 
 /* ---- modale generica ---- */
+/* Il codice d'accesso dell'anteprima pubblica: vive solo in questo browser,
+   non è un account. Serve a non lasciare aperto un rubinetto AI su internet. */
+function chiediCodice(){
+  modale({
+    titolo:"Codice d'accesso",
+    nota:"Questa anteprima usa l'assistente AI ed è protetta da un codice. "+
+      "Se non ce l'hai, chiedilo a chi ti ha mandato il link.",
+    campi:[{k:"codice",label:"Codice",val:Ponte.codice(),
+      hint:"Resta salvato in questo browser: lo inserisci una volta sola."}],
+    salva:v=>{
+      Ponte.salvaCodice(String(v.codice||"").trim());
+      toast("Codice salvato: riprova la richiesta");
+      render();
+    },
+  });
+}
+
 let _modaleSalva=null;
 function modale({titolo,campi,salva,nota}){
   _modaleSalva=salva;
@@ -2611,6 +2736,7 @@ const A={
     render();
   },
   "premium-info":()=>vai("faq"),
+  "chiedi-codice":()=>chiediCodice(),
   "salva-casa":async()=>{
     const g=id=>document.getElementById(id)?.value;
     await salvaCasa({mq:g("s-mq")||"",stile:g("s-stile")||"",budget:g("s-budget")||""});
