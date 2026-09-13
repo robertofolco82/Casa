@@ -556,3 +556,40 @@ Applicato: `elettro-cucina-samsung` è stato spacchettato in
 `lavastoviglie-incasso`, ognuno con i suoi candidati confrontabili, il
 riferimento di fascia alta della sua categoria e il contesto del
 pacchetto Veneta nei vincoli. Il record originale è stato eliminato.
+
+## 17. Il campo «vincoli» non è il verbale della chat (13 settembre 2026)
+
+Secondo commento di Roberto dentro l'artifact, sullo stesso giro di
+lavoro: «è quanto ti ho scritto nella chat di claude, non deve stare qui
+nel progetto pubblico. È sufficiente il sotto testo che è già sotto il
+prodotto cercato».
+
+Avevo riversato nel campo `vincoli` dei quattro benchmark della cucina il
+resoconto di quello che Roberto mi aveva detto in conversazione: i
+must-have riformulati, il contesto commerciale del pacchetto Veneta, la
+promozione Samsung, perfino la frase «PRIORITÀ DICHIARATA». Roba da
+verbale, non da scheda prodotto — e per giunta ridondante:
+
+- l'**esigenza**, che sta in cima ed è visibile, già dichiara i must-have;
+- le **specifiche** di ogni candidato già dicono se quel modello li
+  rispetta («Porta: doppia — non conforme al must-have monoporta»);
+- i **contro** di ogni candidato già dicono cosa comporta sceglierlo
+  (perdere la promozione, il prezzo dentro o fuori dal pacchetto).
+
+Regola: `vincoli` contiene solo **vincoli fisici o contrattuali che non
+appartengono a nessun candidato in particolare** — una misura da
+rilevare, un vano esistente, una scadenza. Tutto ciò che riguarda un
+candidato specifico vive dentro quel candidato. Il resoconto della
+conversazione non vive da nessuna parte: la conversazione resta nella
+chat, il progetto tiene i fatti.
+
+Applicato: `vincoli` svuotato su `forno-incasso`, `frigo-incasso`,
+`piano-cottura-induzione` e `lavastoviglie-incasso`. Nessuna informazione
+persa — era tutta già presente altrove.
+
+Resta da decidere con Roberto il caso del benchmark divano
+(`mtrcpmcxnsvsi`), dove i `vincoli` mescolano le due cose: c'è la
+narrazione datata («budget fissato il…, dopo aver verificato che…»), ma
+c'è anche un vincolo fisico vero e load-bearing — la parete del divano
+non è quotata nella tavola post operam e va misurata prima di ordinare.
+Quello non va cancellato, va solo ripulito dal resoconto.
